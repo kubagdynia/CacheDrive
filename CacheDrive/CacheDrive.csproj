@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net6.0;net7.0;net8.0</TargetFrameworks>
+    <Title>CacheDrive</Title>
+    <Description>CacheDrive.</Description>
+    <PackageTags>cache memory file</PackageTags>
+    <PackageReleaseNotes>CacheDrive first initial version</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/kubagdynia/CacheDrive</RepositoryUrl>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/kubagdynia/CacheDrive</PackageProjectUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Copyright>2023</Copyright>
+    <Version>0.1.0</Version>
+    <Authors>Jakub Kurłowicz</Authors>
+    <PackageIcon>CacheDrive.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\CacheDrive.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
