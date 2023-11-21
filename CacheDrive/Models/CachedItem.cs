@@ -1,6 +1,7 @@
 using System;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using CacheDrive.Services;
 
 namespace CacheDrive.Models;
 
@@ -19,20 +20,20 @@ public class CachedItem
     
     private object _unwrapped;
     
-    internal static CachedItem FromCacheable<T>(T item, TimeSpan expiry, bool dirty = false) where T : ICacheable
+    internal static CachedItem FromCacheable<T>(T item, TimeSpan expiry, IDateService dateService, bool dirty = false) where T : ICacheable
     {
         return new CachedItem
         {
-            Cached = DateTime.UtcNow,
-            Expires = DateTime.UtcNow + expiry,
+            Cached = dateService.GetUtcNow(),
+            Expires = dateService.GetUtcNow() + expiry,
             Key = item.CacheKey,
             Contents = JsonSerializer.SerializeToElement(item, JsonSettings.JsonOptions),
             Dirty = dirty
         };
     }
-    
-    internal bool Expired()
-        => Expires < DateTime.UtcNow;
+
+    internal bool Expired(IDateService dateService)
+        => Expires < dateService.GetUtcNow();
 
     internal void Invalidate()
     {

@@ -33,10 +33,11 @@ public class Tests
         _serviceProvider.Dispose();
     }
 
-    [Test]
+    [Test, Order(1)]
     public async Task CacheShouldBeSavedCorrectly()
     {
         ICacheService cacheService = _serviceProvider.GetRequiredService<ICacheService>();
+
         await cacheService.InitializeAsync();
         
         string cacheKey = "name";
@@ -55,7 +56,7 @@ public class Tests
         await cacheService.FlushAsync();
     }
     
-    [Test]
+    [Test, Order(2)]
     public async Task CacheShouldBeloadCorrectly()
     {
         ICacheService cacheService = _serviceProvider.GetRequiredService<ICacheService>();

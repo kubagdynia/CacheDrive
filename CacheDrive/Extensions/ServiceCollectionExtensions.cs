@@ -17,6 +17,7 @@ public static class ServiceCollectionExtensions
         string configurationSectionName = null,
         CacheSettings settings = null)
     {
+        services.AddSingleton<IDateService, DateService>();
         services.AddSingleton<ICacheService, MemoryCacheFileStorageService>();
 
         if (configuration is not null)

@@ -9,25 +9,29 @@ using Microsoft.Extensions.Options;
 
 namespace CacheDrive.Services;
 
-public class MemoryCacheService : ICacheService
+internal class MemoryCacheService : ICacheService
 {
+    private readonly IDateService _dateService;
     internal readonly ConcurrentDictionary<string, CachedItem> Storage = new();
     
     private readonly CacheSettings _ipGeolocationSettings;
 
     private int _cacheExpirationInSeconds;
 
-    public MemoryCacheService(IOptions<CacheSettings> settings)
+    public MemoryCacheService(IOptions<CacheSettings> settings, IDateService dateService)
     {
+        _dateService = dateService;
         _ipGeolocationSettings = settings?.Value;
         CalculateCacheExpiration();
     }
+
+    protected IDateService DateService => _dateService;
     
     public bool HasItem(string key)
     {
         if (Storage.TryGetValue(key, out var cachedItem))
         {
-            return !cachedItem.Expired();
+            return !cachedItem.Expired(_dateService);
         }
 
         return false;
@@ -41,7 +45,7 @@ public class MemoryCacheService : ICacheService
             return false;
         }
         
-        if (cachedItem.Expired())
+        if (cachedItem.Expired(_dateService))
         {
             DeleteAsync(cachedItem);
             value = default;
@@ -59,7 +63,7 @@ public class MemoryCacheService : ICacheService
         if (cachedItem == null)
             return default;
         
-        if (cachedItem.Expired())
+        if (cachedItem.Expired(_dateService))
         {
             await DeleteAsync(cachedItem);
             return default; 
@@ -81,7 +85,7 @@ public class MemoryCacheService : ICacheService
             return;
         }
         
-        var cachedItem = CachedItem.FromCacheable(item, length, true);
+        var cachedItem = CachedItem.FromCacheable(item, length, _dateService, true);
         Set(cachedItem);
     }
     
@@ -100,7 +104,7 @@ public class MemoryCacheService : ICacheService
             return Task.CompletedTask;
         }
 
-        var cachedItem = CachedItem.FromCacheable(item, length, true);
+        var cachedItem = CachedItem.FromCacheable(item, length, _dateService, true);
 
         return SetAsync(cachedItem);
     }
@@ -196,7 +200,7 @@ public class MemoryCacheService : ICacheService
         if (expirySeconds == 0)
         {
             return _ipGeolocationSettings.CacheExpirationType == CacheExpirationType.Never
-                ? TimeSpan.FromDays(365 * 100)
+                ? TimeSpan.FromDays(365 * 1000)
                 : TimeSpan.FromSeconds(_cacheExpirationInSeconds);
         }
 

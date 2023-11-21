@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace CacheDrive;
 
-public class JsonSettings
+internal static class JsonSettings
 {
     public static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {

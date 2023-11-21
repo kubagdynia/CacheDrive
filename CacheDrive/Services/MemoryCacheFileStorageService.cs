@@ -9,10 +9,10 @@ using Microsoft.Extensions.Options;
 
 namespace CacheDrive.Services;
 
-public class MemoryCacheFileStorageService : MemoryCacheService
+internal class MemoryCacheFileStorageService : MemoryCacheService
 {
-    public MemoryCacheFileStorageService(IOptions<CacheSettings> settings)
-        : base(settings)
+    public MemoryCacheFileStorageService(IOptions<CacheSettings> settings, IDateService dateService)
+        : base(settings, dateService)
     {
         CreateCacheDirectory();
     }
@@ -21,7 +21,7 @@ public class MemoryCacheFileStorageService : MemoryCacheService
     {
         foreach ((string key, CachedItem item) in Storage)
         {
-            if (!item.Dirty || item.Expired())
+            if (!item.Dirty || item.Expired(DateService))
                 continue;
 
             var cachedItem = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
@@ -48,7 +48,7 @@ public class MemoryCacheFileStorageService : MemoryCacheService
 
             if (cachedItem is null) return;
 
-            if (cachedItem.Expired())
+            if (cachedItem.Expired(DateService))
             {
                 File.Delete(file);
                 continue;
