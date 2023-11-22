@@ -1,5 +1,3 @@
-using CacheDrive.Configuration;
-using CacheDrive.Extensions;
 using CacheDrive.Models;
 using CacheDrive.Services;
 using FluentAssertions;
@@ -9,34 +7,12 @@ namespace CacheDrive.Tests;
 
 public class Tests
 {
-    private ServiceCollection _services;
-    private ServiceProvider _serviceProvider;
-    
-    [OneTimeSetUp]
-    public void Init()
-    {
-        _services = new ServiceCollection();
-        _services.RegisterCacheDrive(new CacheSettings
-        {
-            CacheEnabled = true,
-            CacheExpirationType = CacheExpirationType.Hours,
-            CacheExpiration = 2,
-            CacheType = CacheType.MemoryAndFile
-        });
-        
-        _serviceProvider = _services.BuildServiceProvider();
-    }
-
-    [OneTimeTearDown]
-    public void Cleanup()
-    {
-        _serviceProvider.Dispose();
-    }
-
     [Test, Order(1)]
     public async Task CacheShouldBeSavedCorrectly()
     {
-        ICacheService cacheService = _serviceProvider.GetRequiredService<ICacheService>();
+        ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now);
+        
+        ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
 
         await cacheService.InitializeAsync();
         
@@ -47,19 +23,21 @@ public class Tests
         if (cacheService.TryGetValue(SpecificField.GetCacheKey(cacheKey), out SpecificField cachedSpecificField))
         {
              cachedSpecificField.Value.Should().Be("John");
+             await cacheService.FlushAsync();
         }
         else
         {
+            await cacheService.FlushAsync();
             Assert.Fail();
         }
-        
-        await cacheService.FlushAsync();
     }
     
     [Test, Order(2)]
-    public async Task CacheShouldBeloadCorrectly()
+    public async Task CacheShouldBeLoadCorrectly()
     {
-        ICacheService cacheService = _serviceProvider.GetRequiredService<ICacheService>();
+        ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now);
+        
+        ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         await cacheService.InitializeAsync();
         
         string cacheKey = "name";
@@ -67,12 +45,36 @@ public class Tests
         if (cacheService.TryGetValue(SpecificField.GetCacheKey(cacheKey), out SpecificField cachedSpecificField))
         {
             cachedSpecificField.Value.Should().Be("John");
+            await cacheService.FlushAsync();
         }
         else
         {
+            await cacheService.FlushAsync();
             Assert.Fail();
         }
-        
-        await cacheService.FlushAsync();
     }
+    
+    [Test, Order(3)]
+    public async Task CacheShouldExpired()
+    {
+        ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now.AddHours(3));
+        
+        ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
+        await cacheService.InitializeAsync();
+        
+        string cacheKey = "name";
+
+        if (!cacheService.TryGetValue(SpecificField.GetCacheKey(cacheKey), out SpecificField _))
+        {
+            await cacheService.FlushAsync();
+            Assert.Pass();
+        }
+        else
+        {
+            await cacheService.FlushAsync();
+            Assert.Fail();
+        }
+    }
+    
+    
 }

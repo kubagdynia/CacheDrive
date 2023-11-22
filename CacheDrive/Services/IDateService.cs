@@ -2,7 +2,7 @@ using System;
 
 namespace CacheDrive.Services;
 
-internal interface IDateService
+public interface IDateService
 {
     DateTime GetUtcNow();
 }
