@@ -36,6 +36,18 @@ internal class MemoryCacheService : ICacheService
 
         return false;
     }
+    
+    public bool TryGetValue(string key, out string value)
+    {
+        if (TryGetValue(SpecificField.GetCacheKey(key), out SpecificField cachedSpecificField))
+        {
+            value = cachedSpecificField.Value;
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
 
     public bool TryGetValue<T>(string key, out T value) where T : ICacheable
     {
@@ -54,6 +66,12 @@ internal class MemoryCacheService : ICacheService
         
         value = cachedItem.Unwrap<T>();
         return true;
+    }
+    
+    public async Task<string> GetAsync(string key)
+    {
+        var cachedSpecificField = await GetAsync<SpecificField>(SpecificField.GetCacheKey(key));
+        return await Task.FromResult(cachedSpecificField.Value);
     }
 
     public async Task<T> GetAsync<T>(string key) where T : ICacheable
@@ -87,6 +105,11 @@ internal class MemoryCacheService : ICacheService
         
         var cachedItem = CachedItem.FromCacheable(item, length, _dateService, true);
         Set(cachedItem);
+    }
+
+    public Task SetAsync(string key, string value)
+    {
+        return SetAsync(SpecificField.Create(key, value));
     }
     
     public Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable

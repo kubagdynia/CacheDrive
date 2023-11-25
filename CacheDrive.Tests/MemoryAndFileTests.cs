@@ -17,13 +17,13 @@ public class MemoryAndFileTests
 
         await cacheService.InitializeAsync();
         
-        string cacheKey = "name";
+        string key = "name";
 
-        await cacheService.SetAsync(SpecificField.Create(cacheKey, "John"));
+        await cacheService.SetAsync(key, "John");
 
-        if (cacheService.TryGetValue(SpecificField.GetCacheKey(cacheKey), out SpecificField cachedSpecificField))
+        if (cacheService.TryGetValue(key, out string cachedValue))
         {
-             cachedSpecificField.Value.Should().Be("John");
+            cachedValue.Should().Be("John");
              await cacheService.FlushAsync();
         }
         else
@@ -41,11 +41,11 @@ public class MemoryAndFileTests
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         await cacheService.InitializeAsync();
         
-        string cacheKey = "name";
+        string key = "name";
 
-        if (cacheService.TryGetValue(SpecificField.GetCacheKey(cacheKey), out SpecificField cachedSpecificField))
+        if (cacheService.TryGetValue(key, out string cachedValue))
         {
-            cachedSpecificField.Value.Should().Be("John");
+            cachedValue.Should().Be("John");
             await cacheService.FlushAsync();
         }
         else
@@ -63,9 +63,9 @@ public class MemoryAndFileTests
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         await cacheService.InitializeAsync();
         
-        string cacheKey = "name";
+        string key = "name";
 
-        if (!cacheService.TryGetValue(SpecificField.GetCacheKey(cacheKey), out SpecificField _))
+        if (!cacheService.TryGetValue(SpecificField.GetCacheKey(key), out SpecificField _))
         {
             await cacheService.FlushAsync();
             Assert.Pass();

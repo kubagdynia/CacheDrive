@@ -19,12 +19,14 @@ public class MemoryTests
         
         await cacheService.InitializeAsync();
 
-        await cacheService.SetAsync(SpecificField.Create(key, text));
+        // await cacheService.SetAsync(SpecificField.Create(key, text));
+        await cacheService.SetAsync(key, text);
 
-        var cachedSpecificField =  await cacheService.GetAsync<SpecificField>(SpecificField.GetCacheKey(key));
+        // var cachedSpecificField =  await cacheService.GetAsync<SpecificField>(SpecificField.GetCacheKey(key));
+        string resultValue =  await cacheService.GetAsync(key);
         
         await cacheService.FlushAsync();
         
-        cachedSpecificField.Value.Should().Be(text);
+        resultValue.Should().Be(text);
     }
 }
