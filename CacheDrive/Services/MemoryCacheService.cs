@@ -14,14 +14,14 @@ internal class MemoryCacheService : ICacheService
     private readonly IDateService _dateService;
     internal readonly ConcurrentDictionary<string, CachedItem> Storage = new();
     
-    private readonly CacheSettings _ipGeolocationSettings;
+    private readonly CacheSettings _cacheSettings;
 
     private int _cacheExpirationInSeconds;
 
     public MemoryCacheService(IOptions<CacheSettings> settings, IDateService dateService)
     {
         _dateService = dateService;
-        _ipGeolocationSettings = settings?.Value;
+        _cacheSettings = settings?.Value;
         CalculateCacheExpiration();
     }
 
@@ -175,7 +175,7 @@ internal class MemoryCacheService : ICacheService
 
     public virtual Task InitializeAsync()
         => Task.CompletedTask;
-    
+
     private CachedItem Get(ICacheable item)
         => Get(item.CacheKey);
 
@@ -184,12 +184,12 @@ internal class MemoryCacheService : ICacheService
     
     private void CalculateCacheExpiration()
     {
-        _cacheExpirationInSeconds = _ipGeolocationSettings.CacheExpirationType switch
+        _cacheExpirationInSeconds = _cacheSettings.CacheExpirationType switch
         {
-            CacheExpirationType.Seconds => _ipGeolocationSettings.CacheExpiration,
-            CacheExpirationType.Minutes => _ipGeolocationSettings.CacheExpiration * 60,
-            CacheExpirationType.Hours => _ipGeolocationSettings.CacheExpiration * 60 * 60,
-            CacheExpirationType.Days => _ipGeolocationSettings.CacheExpiration * 60 * 60 * 24,
+            CacheExpirationType.Seconds => _cacheSettings.CacheExpiration,
+            CacheExpirationType.Minutes => _cacheSettings.CacheExpiration * 60,
+            CacheExpirationType.Hours => _cacheSettings.CacheExpiration * 60 * 60,
+            CacheExpirationType.Days => _cacheSettings.CacheExpiration * 60 * 60 * 24,
             CacheExpirationType.Never => -1,
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -199,7 +199,7 @@ internal class MemoryCacheService : ICacheService
     {
         if (expirySeconds == 0)
         {
-            return _ipGeolocationSettings.CacheExpirationType == CacheExpirationType.Never
+            return _cacheSettings.CacheExpirationType == CacheExpirationType.Never
                 ? TimeSpan.FromDays(365 * 1000)
                 : TimeSpan.FromSeconds(_cacheExpirationInSeconds);
         }

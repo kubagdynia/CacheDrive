@@ -1,7 +1,9 @@
+using System;
 using CacheDrive.Configuration;
 using CacheDrive.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace CacheDrive.Extensions;
 
@@ -9,17 +11,14 @@ public static class ServiceCollectionExtensions
 {
     public static void RegisterCacheDrive(this IServiceCollection services, CacheSettings settings = null)
     {
-        RegisterIpGeolocation(services, null, null, settings);
+        RegisterCacheDrive(services, null, null, settings);
     }
 
-    public static void RegisterIpGeolocation(this IServiceCollection services,
+    public static void RegisterCacheDrive(this IServiceCollection services,
         IConfiguration configuration = null,
         string configurationSectionName = null,
         CacheSettings settings = null)
     {
-        services.AddSingleton<IDateService, DateService>();
-        services.AddSingleton<ICacheService, MemoryCacheFileStorageService>();
-
         if (configuration is not null)
         {
             if (string.IsNullOrEmpty(configurationSectionName))
@@ -61,5 +60,20 @@ public static class ServiceCollectionExtensions
             }
         }
         
+        services.AddSingleton<IDateService, DateService>();
+        
+        services.AddSingleton<ICacheService>(serviceProvider =>
+        {
+            return serviceProvider.GetService<IOptions<CacheSettings>>().Value.CacheType switch
+            {
+                CacheType.Memory => new MemoryCacheService(
+                    serviceProvider.GetRequiredService<IOptions<CacheSettings>>(),
+                    serviceProvider.GetRequiredService<IDateService>()),
+                CacheType.MemoryAndFile => new MemoryCacheFileStorageService(
+                    serviceProvider.GetRequiredService<IOptions<CacheSettings>>(),
+                    serviceProvider.GetRequiredService<IDateService>()),
+                _ => throw new ArgumentOutOfRangeException()
+            };
+        });
     }
 }

@@ -1,6 +1,6 @@
 using CacheDrive.Services;
 
-namespace CacheDrive.Tests;
+namespace CacheDrive.Tests.Helpers;
 
 public class TestDateService(DateTime utcNow) : IDateService
 {

@@ -1,11 +1,12 @@
 using CacheDrive.Models;
 using CacheDrive.Services;
+using CacheDrive.Tests.Helpers;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CacheDrive.Tests;
 
-public class Tests
+public class MemoryAndFileTests
 {
     [Test, Order(1)]
     public async Task CacheShouldBeSavedCorrectly()

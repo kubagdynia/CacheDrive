@@ -3,7 +3,7 @@ using CacheDrive.Extensions;
 using CacheDrive.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace CacheDrive.Tests;
+namespace CacheDrive.Tests.Helpers;
 
 public static class TestHelper
 {
