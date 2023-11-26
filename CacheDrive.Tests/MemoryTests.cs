@@ -1,5 +1,4 @@
 using CacheDrive.Configuration;
-using CacheDrive.Models;
 using CacheDrive.Services;
 using CacheDrive.Tests.Helpers;
 using FluentAssertions;
@@ -18,11 +17,9 @@ public class MemoryTests
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         
         await cacheService.InitializeAsync();
-
-        // await cacheService.SetAsync(SpecificField.Create(key, text));
+        
         await cacheService.SetAsync(key, text);
-
-        // var cachedSpecificField =  await cacheService.GetAsync<SpecificField>(SpecificField.GetCacheKey(key));
+        
         string resultValue =  await cacheService.GetAsync(key);
         
         await cacheService.FlushAsync();

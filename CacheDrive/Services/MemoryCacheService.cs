@@ -39,7 +39,7 @@ internal class MemoryCacheService : ICacheService
     
     public bool TryGetValue(string key, out string value)
     {
-        if (TryGetValue(SpecificField.GetCacheKey(key), out SpecificField cachedSpecificField))
+        if (TryGetValue(key, out SpecificField cachedSpecificField))
         {
             value = cachedSpecificField.Value;
             return true;
@@ -51,7 +51,7 @@ internal class MemoryCacheService : ICacheService
 
     public bool TryGetValue<T>(string key, out T value) where T : ICacheable
     {
-        if (!Storage.TryGetValue(key, out var cachedItem))
+        if (!Storage.TryGetValue(SpecificField.GetCacheKey(key), out var cachedItem))
         {
             value = default;
             return false;
@@ -70,13 +70,15 @@ internal class MemoryCacheService : ICacheService
     
     public async Task<string> GetAsync(string key)
     {
-        var cachedSpecificField = await GetAsync<SpecificField>(SpecificField.GetCacheKey(key));
+        var cachedSpecificField = await GetAsync<SpecificField>(key);
         return await Task.FromResult(cachedSpecificField.Value);
     }
 
     public async Task<T> GetAsync<T>(string key) where T : ICacheable
     {
-        var cachedItem = Get(key);
+        var cacheKey = T.GetCacheKey(key);
+        
+        var cachedItem = Get(cacheKey);
 
         if (cachedItem == null)
             return default;

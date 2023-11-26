@@ -1,4 +1,3 @@
-using CacheDrive.Models;
 using CacheDrive.Services;
 using CacheDrive.Tests.Helpers;
 using FluentAssertions;
@@ -65,7 +64,7 @@ public class MemoryAndFileTests
         
         string key = "name";
 
-        if (!cacheService.TryGetValue(SpecificField.GetCacheKey(key), out SpecificField _))
+        if (!cacheService.TryGetValue(key, out string _))
         {
             await cacheService.FlushAsync();
             Assert.Pass();

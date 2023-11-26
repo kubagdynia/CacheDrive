@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace CacheDrive.Models;
 
-public class SpecificField : ICacheable
+internal class SpecificField : ICacheable
 {
     [JsonPropertyName("key")]
     public string Key { get; set; }
