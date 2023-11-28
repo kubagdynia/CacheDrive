@@ -37,21 +37,30 @@ internal class MemoryCacheService : ICacheService
         return false;
     }
     
-    public bool TryGetValue(string key, out string value)
+    public bool TryGetValue<T>(string key, out T value)
     {
-        if (TryGetValue(key, out SpecificField cachedSpecificField))
+        if (TryGetCacheableValue(key, out ObjectItem<T> result))
         {
-            value = cachedSpecificField.Value;
-            return true;
+            if (result == null)
+            {
+                value = default;
+                return true;
+            }
+            
+            if (result.Value is { } item)
+            {
+                value = item;
+                return true;
+            }
         }
 
-        value = null;
+        value = default;
         return false;
     }
 
-    public bool TryGetValue<T>(string key, out T value) where T : ICacheable
+    private bool TryGetCacheableValue<T>(string key, out T value) where T : ICacheable
     {
-        if (!Storage.TryGetValue(SpecificField.GetCacheKey(key), out var cachedItem))
+        if (!Storage.TryGetValue(ObjectItem<T>.GetCacheKey(key), out CachedItem cachedItem))
         {
             value = default;
             return false;
@@ -68,25 +77,31 @@ internal class MemoryCacheService : ICacheService
         return true;
     }
     
-    public async Task<string> GetAsync(string key)
+    public async Task<T> GetAsync<T>(string key)
     {
-        var cachedSpecificField = await GetAsync<SpecificField>(key);
-        return await Task.FromResult(cachedSpecificField.Value);
+        var cachedItem = await GetCacheableAsync<ObjectItem<T>>(key);
+
+        if (cachedItem is null)
+        {
+            return await Task.FromResult<T>(default);
+        }
+        
+        return await Task.FromResult(cachedItem.Value);
     }
 
-    public async Task<T> GetAsync<T>(string key) where T : ICacheable
+    private async Task<T> GetCacheableAsync<T>(string key) where T : ICacheable
     {
         var cacheKey = T.GetCacheKey(key);
         
         var cachedItem = Get(cacheKey);
 
-        if (cachedItem == null)
-            return default;
+        if (cachedItem is null)
+            return await Task.FromResult<T>(default);
         
         if (cachedItem.Expired(_dateService))
         {
             await DeleteAsync(cachedItem);
-            return default; 
+            return await Task.FromResult<T>(default);
         }
 
         return cachedItem.Unwrap<T>();
@@ -108,10 +123,10 @@ internal class MemoryCacheService : ICacheService
         var cachedItem = CachedItem.FromCacheable(item, length, _dateService, true);
         Set(cachedItem);
     }
-
-    public Task SetAsync(string key, string value)
+    
+    public Task SetAsync<T>(string key, T value)
     {
-        return SetAsync(SpecificField.Create(key, value));
+        return SetAsync(ObjectItem<T>.Create(key, value));
     }
     
     public Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable

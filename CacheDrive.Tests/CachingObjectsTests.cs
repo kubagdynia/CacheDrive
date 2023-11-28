@@ -37,7 +37,7 @@ public class CachingObjectsTests
         
         await cacheService.InitializeAsync();
         
-        await cacheService.SetAsync(_testClass);
+        await cacheService.SetAsync(_testClass.Id.ToString(), _testClass);
 
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());
         
@@ -59,7 +59,7 @@ public class CachingObjectsTests
         
         await cacheService.InitializeAsync();
         
-        await cacheService.SetAsync(_testClass);
+        await cacheService.SetAsync(_testClass.Id.ToString(), _testClass);
 
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());
         

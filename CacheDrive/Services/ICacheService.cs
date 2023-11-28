@@ -6,17 +6,13 @@ public interface ICacheService
 {
     bool HasItem(string key);
 
-    bool TryGetValue(string key, out string value);
-    
-    bool TryGetValue<T>(string key, out T value) where T : ICacheable;
+    bool TryGetValue<T>(string key, out T value);
 
-    Task<string> GetAsync(string key);
-    
-    Task<T> GetAsync<T>(string key) where T : ICacheable;
+    Task<T> GetAsync<T>(string key);
 
     void Set<T>(T item, int expirySeconds = 0) where T : ICacheable;
 
-    Task SetAsync(string key, string value);
+    Task SetAsync<T>(string key, T value);
     
     Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable;
 

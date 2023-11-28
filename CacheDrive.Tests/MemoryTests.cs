@@ -20,7 +20,7 @@ public class MemoryTests
         
         await cacheService.SetAsync(key, text);
         
-        string resultValue =  await cacheService.GetAsync(key);
+        string resultValue =  await cacheService.GetAsync<string>(key);
         
         await cacheService.FlushAsync();
         
