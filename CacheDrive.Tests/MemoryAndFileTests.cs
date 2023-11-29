@@ -19,7 +19,7 @@ public class MemoryAndFileTests
         string key = "name";
 
         await cacheService.SetAsync(key, "John");
-
+        
         if (cacheService.TryGetValue(key, out string cachedValue))
         {
             cachedValue.Should().Be("John");

@@ -11,6 +11,8 @@ namespace CacheDrive.Services;
 
 internal class MemoryCacheFileStorageService : MemoryCacheService
 {
+    private const string CacheFolderName = "cache";
+
     public MemoryCacheFileStorageService(IOptions<CacheSettings> settings, IDateService dateService)
         : base(settings, dateService)
     {
@@ -24,11 +26,11 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
             if (!item.Dirty || item.Expired(DateService))
                 continue;
 
-            var cachedItem = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
+            string cachedItem = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
 
-            var safeFilename = SafeFilenameRegex().Replace(key, string.Empty);
+            string safeFilename = SafeFilenameRegex().Replace(input: key, replacement: string.Empty);
             
-            var path = CachePath($"{safeFilename}.json");
+            string path = CachePath(fileName: $"{safeFilename}.json");
 
             await using StreamWriter sw = File.CreateText(path);
             await sw.WriteLineAsync(cachedItem);
@@ -38,13 +40,13 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
 
     public override async Task InitializeAsync()
     {
-        var dirs = Directory.GetFiles(GetCacheDirectory(), "*.json");
+        string[] dirs = Directory.GetFiles(path: GetCacheDirectory(), searchPattern: "*.json");
         
-        foreach (var file in dirs)
+        foreach (string file in dirs)
         {
-            var jsonString = await File.ReadAllTextAsync(file);
+            string jsonString = await File.ReadAllTextAsync(file);
 
-            var cachedItem = JsonSerializer.Deserialize<CachedItem>(jsonString, JsonSettings.JsonOptions);
+            CachedItem cachedItem = JsonSerializer.Deserialize<CachedItem>(jsonString, JsonSettings.JsonOptions);
 
             if (cachedItem is null) return;
 
@@ -64,18 +66,18 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
     {
         if (_safeFilenameRegex is null)
         {
-            var regSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            _safeFilenameRegex = new Regex($"[{Regex.Escape(regSearch)}]");
+            string regSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
+            _safeFilenameRegex = new Regex(pattern: $"[{Regex.Escape(regSearch)}]");
         }
 
         return _safeFilenameRegex;
     }
     
     private string CachePath(string fileName)
-        => Path.Combine(Environment.CurrentDirectory, "cache", fileName);
+        => Path.Combine(Environment.CurrentDirectory, CacheFolderName, fileName);
 
     private string GetCacheDirectory()
-        => Path.Combine(Environment.CurrentDirectory, "cache");
+        => Path.Combine(Environment.CurrentDirectory, CacheFolderName);
     
     private void CreateCacheDirectory()
     {

@@ -15,7 +15,7 @@ public class ObjectItem<T> : ICacheable
         => GetCacheKey(Key);
     
     public static string GetCacheKey(string key)
-        => $"{nameof(ObjectItem<T>)}@{key}";
+        => $"{typeof(T).Name.ToLower()}@{key}";
     
     public static ObjectItem<T> Create(string key, T value)
         => new() { Key = key, Value = value };

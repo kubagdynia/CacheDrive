@@ -29,7 +29,7 @@ internal class MemoryCacheService : ICacheService
     
     public bool HasItem(string key)
     {
-        if (Storage.TryGetValue(key, out var cachedItem))
+        if (Storage.TryGetValue(key, out CachedItem cachedItem))
         {
             return !cachedItem.Expired(_dateService);
         }
@@ -53,14 +53,16 @@ internal class MemoryCacheService : ICacheService
                 return true;
             }
         }
-
+        
         value = default;
         return false;
     }
 
     private bool TryGetCacheableValue<T>(string key, out T value) where T : ICacheable
     {
-        if (!Storage.TryGetValue(ObjectItem<T>.GetCacheKey(key), out CachedItem cachedItem))
+        string cacheKey = T.GetCacheKey(key);
+        
+        if (!Storage.TryGetValue(cacheKey, out CachedItem cachedItem))
         {
             value = default;
             return false;
@@ -79,7 +81,7 @@ internal class MemoryCacheService : ICacheService
     
     public async Task<T> GetAsync<T>(string key)
     {
-        var cachedItem = await GetCacheableAsync<ObjectItem<T>>(key);
+        ObjectItem<T> cachedItem = await GetCacheableAsync<ObjectItem<T>>(key);
 
         if (cachedItem is null)
         {
@@ -91,9 +93,9 @@ internal class MemoryCacheService : ICacheService
 
     private async Task<T> GetCacheableAsync<T>(string key) where T : ICacheable
     {
-        var cacheKey = T.GetCacheKey(key);
+        string cacheKey = T.GetCacheKey(key);
         
-        var cachedItem = Get(cacheKey);
+        CachedItem cachedItem = Get(cacheKey);
 
         if (cachedItem is null)
             return await Task.FromResult<T>(default);
@@ -109,9 +111,9 @@ internal class MemoryCacheService : ICacheService
 
     public void Set<T>(T item, int expirySeconds = 0) where T : ICacheable
     {
-        var length = GetExpirationLength(expirySeconds);
+        TimeSpan length = GetExpirationLength(expirySeconds);
         
-        if (Storage.TryGetValue(item.CacheKey, out var cached))
+        if (Storage.TryGetValue(item.CacheKey, out CachedItem cached))
         {
             cached.Contents = JsonSerializer.SerializeToElement(item, JsonSettings.JsonOptions);
             cached.Cached = DateTime.UtcNow;
@@ -120,7 +122,7 @@ internal class MemoryCacheService : ICacheService
             return;
         }
         
-        var cachedItem = CachedItem.FromCacheable(item, length, _dateService, true);
+        CachedItem cachedItem = CachedItem.FromCacheable(item, expiry: length, _dateService, dirty: true);
         Set(cachedItem);
     }
     
@@ -131,7 +133,7 @@ internal class MemoryCacheService : ICacheService
     
     public Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable
     {
-        var cached = Get(item);
+        CachedItem cached = Get(item);
 
         TimeSpan length = GetExpirationLength(expirySeconds);
 
@@ -144,7 +146,7 @@ internal class MemoryCacheService : ICacheService
             return Task.CompletedTask;
         }
 
-        var cachedItem = CachedItem.FromCacheable(item, length, _dateService, true);
+        CachedItem cachedItem = CachedItem.FromCacheable(item, expiry: length, _dateService, dirty: true);
 
         return SetAsync(cachedItem);
     }
@@ -174,9 +176,9 @@ internal class MemoryCacheService : ICacheService
 
     public void DeletePrefix(string prefix)
     {
-        var toDeleted = new List<string>();
+        List<string> toDeleted = new List<string>();
         
-        foreach (var pair in Storage)
+        foreach (KeyValuePair<string, CachedItem> pair in Storage)
         {
             if (pair.Key.StartsWith(prefix))
             {
@@ -184,7 +186,7 @@ internal class MemoryCacheService : ICacheService
             }
         }
 
-        foreach (var key in toDeleted)
+        foreach (string key in toDeleted)
         {
             Delete(key);
         }
@@ -192,9 +194,9 @@ internal class MemoryCacheService : ICacheService
     
     public Task DeletePrefixAsync(string prefix)
     {
-        var toDeleted = new List<string>();
+        List<string> toDeleted = new List<string>();
         
-        foreach (var pair in Storage)
+        foreach (KeyValuePair<string, CachedItem> pair in Storage)
         {
             if (pair.Key.StartsWith(prefix))
             {
@@ -202,7 +204,7 @@ internal class MemoryCacheService : ICacheService
             }
         }
 
-        foreach (var key in toDeleted)
+        foreach (string key in toDeleted)
         {
             DeleteAsync(key);
         }
@@ -220,7 +222,7 @@ internal class MemoryCacheService : ICacheService
         => Get(item.CacheKey);
 
     private CachedItem Get(string key)
-        => Storage.TryGetValue(key, out var cachedItem) ? cachedItem : null;
+        => Storage.TryGetValue(key, out CachedItem cachedItem) ? cachedItem : null;
     
     private void CalculateCacheExpiration()
     {
