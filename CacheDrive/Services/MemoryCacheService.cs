@@ -39,7 +39,7 @@ internal class MemoryCacheService : ICacheService
     
     public bool TryGetValue<T>(string key, out T value)
     {
-        if (TryGetCacheableValue(key, out ObjectItem<T> result))
+        if (TryGetCacheableValue(key, out CacheableItem<T> result))
         {
             if (result == null)
             {
@@ -81,7 +81,7 @@ internal class MemoryCacheService : ICacheService
     
     public async Task<T> GetAsync<T>(string key)
     {
-        ObjectItem<T> cachedItem = await GetCacheableAsync<ObjectItem<T>>(key);
+        CacheableItem<T> cachedItem = await GetCacheableAsync<CacheableItem<T>>(key);
 
         if (cachedItem is null)
         {
@@ -128,7 +128,7 @@ internal class MemoryCacheService : ICacheService
     
     public Task SetAsync<T>(string key, T value, int expirySeconds = 0)
     {
-        return SetAsync(ObjectItem<T>.Create(key, value), expirySeconds);
+        return SetAsync(CacheableItem<T>.Create(key, value), expirySeconds);
     }
     
     public Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable

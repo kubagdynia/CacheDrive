@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 
 namespace CacheDrive.Models;
 
-public class ObjectItem<T> : ICacheable
+public class CacheableItem<T> : ICacheable
 {
     [JsonPropertyName("key")]
     public string Key { get; set; }
@@ -17,6 +17,6 @@ public class ObjectItem<T> : ICacheable
     public static string GetCacheKey(string key)
         => $"{typeof(T).Name.ToLower()}@{key}";
     
-    public static ObjectItem<T> Create(string key, T value)
+    public static CacheableItem<T> Create(string key, T value)
         => new() { Key = key, Value = value };
 }
