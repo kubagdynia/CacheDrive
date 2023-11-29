@@ -126,9 +126,9 @@ internal class MemoryCacheService : ICacheService
         Set(cachedItem);
     }
     
-    public Task SetAsync<T>(string key, T value)
+    public Task SetAsync<T>(string key, T value, int expirySeconds = 0)
     {
-        return SetAsync(ObjectItem<T>.Create(key, value));
+        return SetAsync(ObjectItem<T>.Create(key, value), expirySeconds);
     }
     
     public Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable

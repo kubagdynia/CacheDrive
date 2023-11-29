@@ -12,7 +12,7 @@ public interface ICacheService
 
     void Set<T>(T item, int expirySeconds = 0) where T : ICacheable;
 
-    Task SetAsync<T>(string key, T value);
+    Task SetAsync<T>(string key, T value, int expirySeconds = 0);
     
     Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable;
 
