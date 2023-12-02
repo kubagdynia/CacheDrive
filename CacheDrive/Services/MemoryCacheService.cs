@@ -14,14 +14,14 @@ internal class MemoryCacheService : ICacheService
     private readonly IDateService _dateService;
     internal readonly ConcurrentDictionary<string, CachedItem> Storage = new();
     
-    private readonly CacheSettings _cacheSettings;
+    protected readonly CacheSettings CacheSettings;
 
     private int _cacheExpirationInSeconds;
 
     public MemoryCacheService(IOptions<CacheSettings> settings, IDateService dateService)
     {
         _dateService = dateService;
-        _cacheSettings = settings?.Value;
+        CacheSettings = settings?.Value;
         CalculateCacheExpiration();
     }
 
@@ -115,7 +115,7 @@ internal class MemoryCacheService : ICacheService
         return cachedItem.Unwrap<T>();
     }
 
-    public void Set<T>(T item, int expirySeconds = 0) where T : ICacheable
+    private void Set<T>(T item, int expirySeconds = 0) where T : ICacheable
     {
         TimeSpan length = GetExpirationLength(expirySeconds);
         
@@ -137,7 +137,7 @@ internal class MemoryCacheService : ICacheService
         return SetAsync(CacheableItem<T>.Create(key, value), expirySeconds);
     }
     
-    public Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable
+    private Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable
     {
         CachedItem cached = Get(item);
 
@@ -180,44 +180,6 @@ internal class MemoryCacheService : ICacheService
     private Task<bool> DeleteAsync(CachedItem item)
         => DeleteAsync(item.Key);
 
-    public void DeletePrefix(string prefix)
-    {
-        List<string> toDeleted = new List<string>();
-        
-        foreach (KeyValuePair<string, CachedItem> pair in Storage)
-        {
-            if (pair.Key.StartsWith(prefix))
-            {
-                toDeleted.Add(pair.Key);
-            }
-        }
-
-        foreach (string key in toDeleted)
-        {
-            Delete(key);
-        }
-    }
-    
-    public Task DeletePrefixAsync(string prefix)
-    {
-        List<string> toDeleted = new List<string>();
-        
-        foreach (KeyValuePair<string, CachedItem> pair in Storage)
-        {
-            if (pair.Key.StartsWith(prefix))
-            {
-                toDeleted.Add(pair.Key);
-            }
-        }
-
-        foreach (string key in toDeleted)
-        {
-            DeleteAsync(key);
-        }
-
-        return Task.CompletedTask;
-    }
-
     public int CountCacheItems()
         => Storage.Count;
 
@@ -229,12 +191,12 @@ internal class MemoryCacheService : ICacheService
     
     private void CalculateCacheExpiration()
     {
-        _cacheExpirationInSeconds = _cacheSettings.CacheExpirationType switch
+        _cacheExpirationInSeconds = CacheSettings.CacheExpirationType switch
         {
-            CacheExpirationType.Seconds => _cacheSettings.CacheExpiration,
-            CacheExpirationType.Minutes => _cacheSettings.CacheExpiration * 60,
-            CacheExpirationType.Hours => _cacheSettings.CacheExpiration * 60 * 60,
-            CacheExpirationType.Days => _cacheSettings.CacheExpiration * 60 * 60 * 24,
+            CacheExpirationType.Seconds => CacheSettings.CacheExpiration,
+            CacheExpirationType.Minutes => CacheSettings.CacheExpiration * 60,
+            CacheExpirationType.Hours => CacheSettings.CacheExpiration * 60 * 60,
+            CacheExpirationType.Days => CacheSettings.CacheExpiration * 60 * 60 * 24,
             CacheExpirationType.Never => -1,
             _ => throw new ArgumentOutOfRangeException()
         };
@@ -244,7 +206,7 @@ internal class MemoryCacheService : ICacheService
     {
         if (expirySeconds == 0)
         {
-            return _cacheSettings.CacheExpirationType == CacheExpirationType.Never
+            return CacheSettings.CacheExpirationType == CacheExpirationType.Never
                 ? TimeSpan.FromDays(365 * 1000)
                 : TimeSpan.FromSeconds(_cacheExpirationInSeconds);
         }

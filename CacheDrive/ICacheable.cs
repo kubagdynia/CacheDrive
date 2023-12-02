@@ -1,6 +1,6 @@
 namespace CacheDrive;
 
-public interface ICacheable
+internal interface ICacheable
 {
     string CacheKey { get; }
 

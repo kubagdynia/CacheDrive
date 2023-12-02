@@ -6,6 +6,8 @@ public class CacheSettings
     
     public int CacheExpiration { get; set; } = 60;
 
+    public string CacheFolderName { get; set; } = "cache";
+
     public CacheExpirationType CacheExpirationType { get; set; } = CacheExpirationType.Minutes;
 
     public CacheType CacheType { get; set; } = CacheType.Memory;

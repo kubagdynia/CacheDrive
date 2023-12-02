@@ -11,8 +11,6 @@ namespace CacheDrive.Services;
 
 internal class MemoryCacheFileStorageService : MemoryCacheService
 {
-    private const string CacheFolderName = "cache";
-
     public MemoryCacheFileStorageService(IOptions<CacheSettings> settings, IDateService dateService)
         : base(settings, dateService)
     {
@@ -74,10 +72,10 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
     }
     
     private string CachePath(string fileName)
-        => Path.Combine(Environment.CurrentDirectory, CacheFolderName, fileName);
+        => Path.Combine(Environment.CurrentDirectory, CacheSettings.CacheFolderName, fileName);
 
     private string GetCacheDirectory()
-        => Path.Combine(Environment.CurrentDirectory, CacheFolderName);
+        => Path.Combine(Environment.CurrentDirectory, CacheSettings.CacheFolderName);
     
     private void CreateCacheDirectory()
     {

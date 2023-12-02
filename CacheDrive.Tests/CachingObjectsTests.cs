@@ -26,6 +26,7 @@ public class CachingObjectsTests
     [Test]
     public async Task ObjectShouldBeProperlyCachedAndRestoredFromTheMemory()
     {
+        // Arrange
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(
             DateTime.Now,
             cacheEnabled: true,
@@ -37,17 +38,21 @@ public class CachingObjectsTests
         
         await cacheService.InitializeAsync();
         
+        // Act
         await cacheService.SetAsync(_testClass.Id.ToString(), _testClass);
 
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());
         
         await cacheService.FlushAsync();
+        
+        // Assert
         cachedTestClass.Should().BeEquivalentTo(_testClass);
     }
     
     [Test, Order(1)]
     public async Task ObjectShoulBeProperlyCachedInMemoryAndPersistedToTheFile()
     {
+        // Arrange
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(
             DateTime.Now,
             cacheEnabled: true,
@@ -59,17 +64,21 @@ public class CachingObjectsTests
         
         await cacheService.InitializeAsync();
         
+        // Act
         await cacheService.SetAsync(_testClass.Id.ToString(), _testClass);
 
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());
         
         await cacheService.FlushAsync();
+        
+        // Assert
         cachedTestClass.Should().BeEquivalentTo(_testClass);
     }
     
     [Test, Order(2)]
     public async Task CacheShouldBeProperlyLoadedFromTheFile_Then_ObjectShouldBeProperlyRestoredFromTheMemory()
     {
+        // Arrange
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(
             DateTime.Now,
             cacheEnabled: true,
@@ -80,16 +89,20 @@ public class CachingObjectsTests
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         
         await cacheService.InitializeAsync();
-
+        
+        // Act
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());
         
         await cacheService.FlushAsync();
+        
+        // Assert
         cachedTestClass.Should().BeEquivalentTo(_testClass);
     }
     
     [Test, Order(3)]
     public async Task CacheShouldExpiredDuringLoadedFromTheFile_Then_ObjectShouldNotBeProperlyRestoredFromTheMemory()
     {
+        // Arrange
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(
             DateTime.Now.AddHours(3),
             cacheEnabled: true,
@@ -101,13 +114,16 @@ public class CachingObjectsTests
         
         await cacheService.InitializeAsync();
 
+        // Act
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());
         
         await cacheService.FlushAsync();
+        
+        // Assert
         cachedTestClass.Should().BeNull();
     }
 
-    private class TestClass : ICacheable
+    private class TestClass
     {
         [JsonPropertyName("id")]
         public Guid Id { get; set; }
@@ -120,12 +136,5 @@ public class CachingObjectsTests
 
         [JsonPropertyName("age")]
         public int Age { get; set; }
-        
-        [JsonIgnore]
-        public string CacheKey
-            => GetCacheKey(Id.ToString());
-    
-        public static string GetCacheKey(string key)
-            => $"{nameof(TestClass)}@{key}";
     }
 }

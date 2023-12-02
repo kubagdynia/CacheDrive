@@ -39,7 +39,6 @@ public class CachingSimpleTypesTests
         (string key, bool value) boolItem = ("bool_test", true);
         await cacheService.SetAsync(boolItem.key, boolItem.value);
         
-        
         int cachedIntItem = await cacheService.GetAsync<int>(intItem.key);
         char cachedCharItem = await cacheService.GetAsync<char>(charItem.key);
         float cachedFloatItem = await cacheService.GetAsync<float>(floatItem.key);
@@ -53,11 +52,6 @@ public class CachingSimpleTypesTests
         cachedCharItem.Should().Be(charItem.value);
         cachedFloatItem.Should().Be(floatItem.value);
         cachedDoubleItem.Should().Be(doubleItem.value);
+        cachedBoolItem.Should().Be(boolItem.value);
     }
-}
-
-public enum Tt
-{
-    One,
-    Two
 }

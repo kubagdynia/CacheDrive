@@ -10,16 +10,19 @@ public class MemoryAndFileTests
     [Test, Order(1)]
     public async Task CacheShouldBeSavedCorrectly()
     {
+        // Arrange
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
 
         await cacheService.InitializeAsync();
         
+        // Act
         string key = "name";
 
         await cacheService.SetAsync(key, "John");
         
+        // Assert
         if (cacheService.TryGetValue(key, out string cachedValue))
         {
             cachedValue.Should().Be("John");
@@ -35,6 +38,7 @@ public class MemoryAndFileTests
     [Test, Order(2)]
     public async Task CacheShouldBeLoadCorrectly()
     {
+        // Arrange
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
@@ -42,6 +46,7 @@ public class MemoryAndFileTests
         
         string key = "name";
 
+        // Assert
         if (cacheService.TryGetValue(key, out string cachedValue))
         {
             cachedValue.Should().Be("John");
@@ -57,6 +62,7 @@ public class MemoryAndFileTests
     [Test, Order(3)]
     public async Task CacheShouldExpired()
     {
+        // Arrange
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now.AddHours(3));
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
@@ -64,6 +70,7 @@ public class MemoryAndFileTests
         
         string key = "name";
 
+        // Assert
         if (!cacheService.TryGetValue(key, out string _))
         {
             await cacheService.FlushAsync();
