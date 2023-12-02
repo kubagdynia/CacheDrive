@@ -27,6 +27,12 @@ internal class MemoryCacheService : ICacheService
 
     protected IDateService DateService => _dateService;
     
+    public virtual Task InitializeAsync()
+        => Task.CompletedTask;
+    
+    public virtual Task FlushAsync()
+        => Task.CompletedTask;
+    
     public bool HasItem(string key)
     {
         if (Storage.TryGetValue(key, out CachedItem cachedItem))
@@ -212,11 +218,8 @@ internal class MemoryCacheService : ICacheService
         return Task.CompletedTask;
     }
 
-    public virtual Task FlushAsync()
-        => Task.CompletedTask;
-
-    public virtual Task InitializeAsync()
-        => Task.CompletedTask;
+    public int CountCacheItems()
+        => Storage.Count;
 
     private CachedItem Get(ICacheable item)
         => Get(item.CacheKey);
