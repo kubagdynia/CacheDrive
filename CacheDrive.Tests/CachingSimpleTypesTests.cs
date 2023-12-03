@@ -54,4 +54,41 @@ public class CachingSimpleTypesTests
         cachedDoubleItem.Should().Be(doubleItem.value);
         cachedBoolItem.Should().Be(boolItem.value);
     }
+
+    [Test]
+    public async Task SimpleTypesShouldBeProperlyDeletedFromTheMemoryCache()
+    {
+        // Arrange
+        ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(
+            DateTime.Now,
+            cacheEnabled: true,
+            cacheExpirationType: CacheExpirationType.Hours,
+            cacheExpiration: 2,
+            cacheType: CacheType.Memory);
+        
+        ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
+        
+        await cacheService.InitializeAsync();
+        
+        // Act
+        
+        // Add 50 items
+        for (int i = 0; i < 50; i++)
+        {
+            await cacheService.SetAsync($"test_{i}", i);
+        }
+
+        // Delete every second element
+        for (int i = 0; i < 50; i++)
+        {
+            if ((i + 1) % 2 == 0)
+            {
+                await cacheService.DeleteAsync<int>($"test_{i}");
+            }
+        }
+
+        // // Assert
+        int countCachedItems = cacheService.CountCachedItems();
+        countCachedItems.Should().Be(25);
+    }
 }

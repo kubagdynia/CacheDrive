@@ -60,18 +60,18 @@ public interface ICacheService
     /// </summary>
     /// <param name="key">The key of the element to be remove.</param>
     /// <returns>true if an object was removed successfully; otherwise, false.</returns>
-    bool Delete(string key);
+    bool Delete<T>(string key);
     
     /// <summary>
     /// Deletes the object associated with the given key.
     /// </summary>
     /// <param name="key">The key of the element to be remove.</param>
     /// <returns>true if an object was removed successfully; otherwise, false.</returns>
-    Task<bool> DeleteAsync(string key);
+    Task<bool> DeleteAsync<T>(string key);
 
     /// <summary>
     /// Returns the number of items in the cache.
     /// </summary>
     /// <returns>The number of items in the cache.</returns>
-    int CountCacheItems();
+    int CountCachedItems();
 }

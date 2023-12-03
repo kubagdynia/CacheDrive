@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CacheDrive.Configuration;
@@ -76,7 +75,7 @@ internal class MemoryCacheService : ICacheService
         
         if (cachedItem.Expired(_dateService))
         {
-            DeleteAsync(cachedItem);
+            Delete<T>(cachedItem.Key);
             value = default;
             return false;
         }
@@ -168,19 +167,19 @@ internal class MemoryCacheService : ICacheService
         return Task.CompletedTask;
     }
 
-    public bool Delete(string key)
-        => key is not null && Storage.TryRemove(key, out _);
+    public bool Delete<T>(string key)
+        => key is not null && Storage.TryRemove(CacheableItem<T>.GetCacheKey(key), out _);
     
-    public Task<bool> DeleteAsync(string key)
+    public Task<bool> DeleteAsync<T>(string key)
+        => key is null ? Task.FromResult(false) : DeleteAsync(CacheableItem<T>.GetCacheKey(key));
+    
+    private Task<bool> DeleteAsync(string key)
         => key is null ? Task.FromResult(false) : Task.FromResult(Storage.TryRemove(key, out _));
-    
-    private bool Delete(CachedItem item)
-        => Delete(item.Key);
     
     private Task<bool> DeleteAsync(CachedItem item)
         => DeleteAsync(item.Key);
 
-    public int CountCacheItems()
+    public int CountCachedItems()
         => Storage.Count;
 
     private CachedItem Get(ICacheable item)
