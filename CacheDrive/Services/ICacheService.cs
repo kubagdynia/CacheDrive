@@ -10,7 +10,7 @@ public interface ICacheService
     /// Can be used many times, each time adding or overwriting data if they have the same keys.
     /// </summary>
     Task InitializeAsync();
-    
+
     /// <summary>
     /// Dumps cached data into files, database, and so on.
     /// Usually it should be run before the application terminates.

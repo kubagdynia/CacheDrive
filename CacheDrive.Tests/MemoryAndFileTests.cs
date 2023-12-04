@@ -14,8 +14,6 @@ public class MemoryAndFileTests
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
-
-        await cacheService.InitializeAsync();
         
         // Act
         string key = "name";
@@ -26,13 +24,15 @@ public class MemoryAndFileTests
         if (cacheService.TryGetValue(key, out string cachedValue))
         {
             cachedValue.Should().Be("John");
-             await cacheService.FlushAsync();
+            await cacheService.FlushAsync();
         }
         else
         {
             await cacheService.FlushAsync();
             Assert.Fail();
         }
+        
+        await cacheService.FlushAsync();
     }
     
     [Test, Order(2)]
@@ -42,7 +42,6 @@ public class MemoryAndFileTests
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
-        await cacheService.InitializeAsync();
         
         string key = "name";
 
@@ -66,7 +65,6 @@ public class MemoryAndFileTests
         ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now.AddHours(3));
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
-        await cacheService.InitializeAsync();
         
         string key = "name";
 

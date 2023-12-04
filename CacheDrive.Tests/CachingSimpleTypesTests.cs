@@ -21,8 +21,6 @@ public class CachingSimpleTypesTests
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         
-        await cacheService.InitializeAsync();
-        
         // Act
         (string key, int value) intItem = ("int_test", 10);
         await cacheService.SetAsync(intItem.key, intItem.value);
@@ -45,8 +43,6 @@ public class CachingSimpleTypesTests
         double cachedDoubleItem = await cacheService.GetAsync<double>(doubleItem.key);
         bool cachedBoolItem = await cacheService.GetAsync<bool>(boolItem.key);
         
-        await cacheService.FlushAsync();
-        
         // Assert
         cachedIntItem.Should().Be(intItem.value);
         cachedCharItem.Should().Be(charItem.value);
@@ -67,8 +63,6 @@ public class CachingSimpleTypesTests
             cacheType: CacheType.Memory);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
-        
-        await cacheService.InitializeAsync();
         
         // Act
         

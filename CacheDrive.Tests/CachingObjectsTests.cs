@@ -36,8 +36,6 @@ public class CachingObjectsTests
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         
-        await cacheService.InitializeAsync();
-        
         // Act
         await cacheService.SetAsync(_testClass.Id.ToString(), _testClass);
 
@@ -61,8 +59,6 @@ public class CachingObjectsTests
             cacheType: CacheType.MemoryAndFile);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
-        
-        await cacheService.InitializeAsync();
         
         // Act
         await cacheService.SetAsync(_testClass.Id.ToString(), _testClass);
@@ -88,8 +84,6 @@ public class CachingObjectsTests
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
         
-        await cacheService.InitializeAsync();
-        
         // Act
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());
         
@@ -111,8 +105,6 @@ public class CachingObjectsTests
             cacheType: CacheType.MemoryAndFile);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
-        
-        await cacheService.InitializeAsync();
 
         // Act
         var cachedTestClass = await cacheService.GetAsync<TestClass>(_testClass.Id.ToString());

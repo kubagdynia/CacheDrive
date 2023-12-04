@@ -15,6 +15,12 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
         : base(settings, dateService)
     {
         CreateCacheDirectory();
+        Initialize();
+    }
+
+    ~MemoryCacheFileStorageService()
+    {
+        Flush();
     }
     
     public override async Task FlushAsync()
@@ -26,25 +32,39 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
 
             string cachedItem = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
 
-            string safeFilename = SafeFilenameRegex().Replace(input: key, replacement: string.Empty);
-            
-            string path = CachePath(fileName: $"{safeFilename}.json");
+            string path = GetFilePath(key);
 
             await using StreamWriter sw = File.CreateText(path);
             await sw.WriteLineAsync(cachedItem);
             item.Dirty = false;
         }
     }
+    
+    private void Flush()
+    {
+        foreach ((string key, CachedItem item) in Storage)
+        {
+            if (!item.Dirty || item.Expired(DateService))
+                continue;
 
+            string cachedItem = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
+            
+            string path = GetFilePath(key);
+
+            using StreamWriter sw = File.CreateText(path);
+            sw.WriteLineAsync(cachedItem);
+            item.Dirty = false;
+        }
+    }
+    
     public override async Task InitializeAsync()
     {
-        string[] dirs = Directory.GetFiles(path: GetCacheDirectory(), searchPattern: "*.json");
+        string[] files = GetCacheFiles();
         
-        foreach (string file in dirs)
+        foreach (string file in files)
         {
             string jsonString = await File.ReadAllTextAsync(file);
-
-            CachedItem cachedItem = JsonSerializer.Deserialize<CachedItem>(jsonString, JsonSettings.JsonOptions);
+            CachedItem cachedItem = DeserializeCachedItem(jsonString);
 
             if (cachedItem is null) return;
 
@@ -55,6 +75,27 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
             }
 
             await SetAsync(cachedItem);
+        }
+    }
+
+    private void Initialize()
+    {
+        string[] files = GetCacheFiles();
+        
+        foreach (string file in files)
+        {
+            string jsonString = File.ReadAllText(file);
+            CachedItem cachedItem = DeserializeCachedItem(jsonString);
+    
+            if (cachedItem is null) return;
+    
+            if (cachedItem.Expired(DateService))
+            {
+                File.Delete(file);
+                continue;
+            }
+    
+            Set(cachedItem);
         }
     }
     
@@ -71,11 +112,24 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
         return _safeFilenameRegex;
     }
     
+    private string GetFilePath(string key)
+    {
+        string safeFilename = SafeFilenameRegex().Replace(input: key, replacement: string.Empty);
+        string path = CachePath(fileName: $"{safeFilename}.json");
+        return path;
+    }
+    
+    private string[] GetCacheFiles()
+        => Directory.GetFiles(path: GetCacheDirectory(), searchPattern: "*.json");
+    
     private string CachePath(string fileName)
         => Path.Combine(Environment.CurrentDirectory, CacheSettings.CacheFolderName, fileName);
 
     private string GetCacheDirectory()
         => Path.Combine(Environment.CurrentDirectory, CacheSettings.CacheFolderName);
+
+    private CachedItem DeserializeCachedItem(string jsonString)
+        => JsonSerializer.Deserialize<CachedItem>(jsonString, JsonSettings.JsonOptions);
     
     private void CreateCacheDirectory()
     {

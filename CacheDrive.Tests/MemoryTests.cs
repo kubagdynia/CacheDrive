@@ -13,18 +13,19 @@ public class MemoryTests
     public async Task StringShouldBeCorrectlySavedAndReadFromTheCacheInMemory(string key, string text)
     {
         // Arrange
-        ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(DateTime.Now, true, CacheExpirationType.Hours, 2, CacheType.Memory);
+        ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(
+            DateTime.Now,
+            cacheEnabled: true,
+            cacheExpirationType: CacheExpirationType.Hours,
+            cacheExpiration: 2,
+            cacheType: CacheType.Memory);
         
         ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
-        
-        await cacheService.InitializeAsync();
         
         // Act
         await cacheService.SetAsync(key, text);
         
         string resultValue =  await cacheService.GetAsync<string>(key);
-        
-        await cacheService.FlushAsync();
         
         // Assert
         resultValue.Should().Be(text);

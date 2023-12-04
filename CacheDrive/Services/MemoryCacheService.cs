@@ -25,7 +25,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     protected IDateService DateService => _dateService;
-    
+
     public virtual Task InitializeAsync()
         => Task.CompletedTask;
     
@@ -156,7 +156,7 @@ internal class MemoryCacheService : ICacheService
         return SetAsync(cachedItem);
     }
     
-    private void Set(CachedItem cachedItem)
+    internal void Set(CachedItem cachedItem)
     {
         Storage.AddOrUpdate(cachedItem.Key, _ => cachedItem, (_, _) => cachedItem);
     }
