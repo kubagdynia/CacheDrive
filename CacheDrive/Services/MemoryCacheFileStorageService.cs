@@ -15,7 +15,11 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
         : base(settings, dateService)
     {
         CreateCacheDirectory();
-        Initialize();
+
+        if (settings.Value.InitializeOnStartup)
+        {
+            Initialize();
+        }
     }
 
     ~MemoryCacheFileStorageService()
