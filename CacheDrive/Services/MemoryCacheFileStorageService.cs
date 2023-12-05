@@ -9,8 +9,10 @@ using Microsoft.Extensions.Options;
 
 namespace CacheDrive.Services;
 
-internal class MemoryCacheFileStorageService : MemoryCacheService
+internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
 {
+    private bool _disposed;
+    
     public MemoryCacheFileStorageService(IOptions<CacheSettings> settings, IDateService dateService)
         : base(settings, dateService)
     {
@@ -21,12 +23,15 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
             Initialize();
         }
     }
-
-    ~MemoryCacheFileStorageService()
-    {
-        Flush();
-    }
     
+    ~MemoryCacheFileStorageService() => Dispose(false);
+    
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
     public override async Task FlushAsync()
     {
         foreach ((string key, CachedItem item) in Storage)
@@ -142,5 +147,34 @@ internal class MemoryCacheFileStorageService : MemoryCacheService
         {
             Directory.CreateDirectory(folderName);
         }
+    }
+    
+    private void Dispose(bool disposing)
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        if (disposing)
+        {
+            // Dispose managed resources.
+            DisposeManageResource();
+        }
+            
+        // Dispose unmanaged resources.
+        DisposeUnManageResource();
+
+        _disposed = true;
+    }
+
+    private void DisposeManageResource()
+    {
+        
+    }
+
+    private void DisposeUnManageResource()
+    {
+        Flush();
     }
 }
