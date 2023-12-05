@@ -31,9 +31,12 @@ public static class ServiceCollectionExtensions
                 services.Configure<CacheSettings>(opt =>
                 {
                     opt.CacheEnabled = settings.CacheEnabled;
+                    opt.CacheFolderName = settings.CacheFolderName;
                     opt.CacheExpiration = settings.CacheExpiration;
                     opt.CacheExpirationType = settings.CacheExpirationType;
                     opt.CacheType = settings.CacheType;
+                    opt.InitializeOnStartup = settings.InitializeOnStartup;
+                    opt.FlushOnExit = settings.FlushOnExit;
                 });
             }
             else
@@ -48,9 +51,12 @@ public static class ServiceCollectionExtensions
                 services.Configure<CacheSettings>(opt =>
                 {
                     opt.CacheEnabled = settings.CacheEnabled;
+                    opt.CacheFolderName = settings.CacheFolderName;
                     opt.CacheExpiration = settings.CacheExpiration;
                     opt.CacheExpirationType = settings.CacheExpirationType;
                     opt.CacheType = settings.CacheType;
+                    opt.InitializeOnStartup = settings.InitializeOnStartup;
+                    opt.FlushOnExit = settings.FlushOnExit;
                 });
             }
             else

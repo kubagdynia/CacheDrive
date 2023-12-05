@@ -39,4 +39,10 @@ public class CacheSettings
     /// Default value is true.
     /// </summary>
     public bool InitializeOnStartup { get; set; } = true;
+    
+    /// <summary>
+    /// Before exit, flush the cache data to a files if necessary.
+    /// Default value is true.
+    /// </summary>
+    public bool FlushOnExit { get; set; } = true;
 }

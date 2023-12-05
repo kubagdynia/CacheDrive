@@ -175,6 +175,9 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
 
     private void DisposeUnManageResource()
     {
-        Flush();
+        if (CacheSettings.FlushOnExit)
+        {
+            Flush();
+        }
     }
 }
