@@ -36,6 +36,15 @@ public interface ICacheService
     /// </param>
     /// <returns>true if the key was found in the cache, otherwise, false.</returns>
     bool TryGetValue<T>(string key, out T value);
+
+    /// <summary>
+    /// Get the value associated with the specified key from the cache.
+    /// </summary>
+    /// <param name="key">The key of the value to get.</param>
+    /// <returns>The value contains the object from the cache with the specified
+    /// key or the default value of T, if the operation failed.
+    /// </returns>
+    T Get<T>(string key);
     
     /// <summary>
     /// Get the value associated with the specified key from the cache.
@@ -46,6 +55,15 @@ public interface ICacheService
     /// </returns>
     Task<T> GetAsync<T>(string key);
 
+    /// <summary>
+    /// Adds a value to the cache if the key does not already exist, or updates if the key already exists.
+    /// </summary>
+    /// <param name="key">The key to be added or whose value should be updated.</param>
+    /// <param name="value">The value to add or update.</param>
+    /// <param name="expirySeconds">After how many seconds a given value will expire in the cache. Optional parameter.
+    /// By default, the value is taken from the configuration.</param>
+    void Set<T>(string key, T value, int expirySeconds = 0);
+    
     /// <summary>
     /// Adds a value to the cache if the key does not already exist, or updates if the key already exists.
     /// </summary>

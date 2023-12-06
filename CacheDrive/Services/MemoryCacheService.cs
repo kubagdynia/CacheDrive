@@ -84,6 +84,18 @@ internal class MemoryCacheService : ICacheService
         return true;
     }
     
+    public T Get<T>(string key)
+    {
+        CacheableItem<T> cachedItem = GetCacheable<CacheableItem<T>>(key);
+
+        if (cachedItem is null)
+        {
+            return default;
+        }
+        
+        return cachedItem.Value;
+    }
+    
     public async Task<T> GetAsync<T>(string key)
     {
         CacheableItem<T> cachedItem = await GetCacheableAsync<CacheableItem<T>>(key);
@@ -113,8 +125,36 @@ internal class MemoryCacheService : ICacheService
 
         return cachedItem.Unwrap<T>();
     }
+    
+    private T GetCacheable<T>(string key) where T : ICacheable
+    {
+        string cacheKey = T.GetCacheKey(key);
+        
+        CachedItem cachedItem = Get(cacheKey);
 
-    private void Set<T>(T item, int expirySeconds = 0) where T : ICacheable
+        if (cachedItem is null)
+            return default;
+        
+        if (cachedItem.Expired(_dateService))
+        {
+            Delete(cachedItem);
+            return default;
+        }
+
+        return cachedItem.Unwrap<T>();
+    }
+    
+    public void Set<T>(string key, T value, int expirySeconds = 0)
+    {
+        SetCacheableItem(CacheableItem<T>.Create(key, value), expirySeconds);
+    }
+    
+    public Task SetAsync<T>(string key, T value, int expirySeconds = 0)
+    {
+        return SetAsync(CacheableItem<T>.Create(key, value), expirySeconds);
+    }
+    
+    private void SetCacheableItem<T>(T item, int expirySeconds = 0) where T : ICacheable
     {
         TimeSpan length = GetExpirationLength(expirySeconds);
         
@@ -129,11 +169,6 @@ internal class MemoryCacheService : ICacheService
         
         CachedItem cachedItem = CachedItem.FromCacheable(item, expiry: length, _dateService, dirty: true);
         Set(cachedItem);
-    }
-    
-    public Task SetAsync<T>(string key, T value, int expirySeconds = 0)
-    {
-        return SetAsync(CacheableItem<T>.Create(key, value), expirySeconds);
     }
     
     private Task SetAsync<T>(T item, int expirySeconds = 0) where T : ICacheable
@@ -176,8 +211,14 @@ internal class MemoryCacheService : ICacheService
     private Task<bool> DeleteAsync(string key)
         => key is null ? Task.FromResult(false) : Task.FromResult(Storage.TryRemove(key, out _));
     
+    private bool Delete(string key)
+        => key is not null && Storage.TryRemove(key, out _);
+    
     private Task<bool> DeleteAsync(CachedItem item)
         => DeleteAsync(item.Key);
+    
+    private bool Delete(CachedItem item)
+        => Delete(item.Key);
 
     public int CountCachedItems()
         => Storage.Count;
