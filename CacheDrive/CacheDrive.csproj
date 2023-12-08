@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net7.0;net8.0</TargetFrameworks>
     <Title>CacheDrive</Title>
-    <Description>CacheDrive.</Description>
-    <PackageTags>cache memory file</PackageTags>
+    <Description>Simple in-memory caching provider with the ability to store objects in files.</Description>
+    <PackageTags>cache memory-cache file-cahce</PackageTags>
     <PackageReleaseNotes>CacheDrive first initial version</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/kubagdynia/CacheDrive</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
