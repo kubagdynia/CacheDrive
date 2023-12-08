@@ -88,8 +88,18 @@ public interface ICacheService
     Task<bool> DeleteAsync<T>(string key);
 
     /// <summary>
-    /// Returns the number of items in the cache.
+    /// Returns the number of objects in the cache.
     /// </summary>
-    /// <returns>The number of items in the cache.</returns>
-    int CountCachedItems();
+    /// <returns>The number of objects in the cache.</returns>
+    int CountCachedObjects();
+
+    /// <summary>
+    /// Removes all keys and values from the cache
+    /// </summary>
+    void ClearCache();
+
+    /// <summary>
+    /// Removes all expired keys and values from the cache
+    /// </summary>
+    void ClearExpiredObjects();
 }

@@ -220,8 +220,22 @@ internal class MemoryCacheService : ICacheService
     private bool Delete(CachedItem item)
         => Delete(item.Key);
 
-    public int CountCachedItems()
+    public int CountCachedObjects()
         => Storage.Count;
+
+    public void ClearCache()
+        => Storage.Clear();
+
+    public void ClearExpiredObjects()
+    {
+        foreach ((string key, CachedItem item) in Storage)
+        {
+            if (item.Expired(DateService))
+            {
+                Delete(key);
+            }
+        }
+    }
 
     private CachedItem Get(ICacheable item)
         => Get(item.CacheKey);

@@ -4,8 +4,14 @@ namespace CacheDrive.Tests.Helpers;
 
 public class TestDateService(DateTime utcNow) : IDateService
 {
+    private DateTime? _utcNow = utcNow;
+    
     public DateTime GetUtcNow()
-    {
-        return utcNow;
-    }
+        => _utcNow ?? DateTime.UtcNow;
+
+    public void SetUtcNow(DateTime dateNow)
+        => _utcNow = dateNow;
+
+    public void SetUtcNow()
+        => _utcNow = null;
 }

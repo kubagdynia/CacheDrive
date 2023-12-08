@@ -125,7 +125,7 @@ public class CachingSimpleTypesTests
         }
 
         // // Assert
-        int countCachedItems = cacheService.CountCachedItems();
+        int countCachedItems = cacheService.CountCachedObjects();
         countCachedItems.Should().Be(25);
     }
     
@@ -160,7 +160,7 @@ public class CachingSimpleTypesTests
         }
 
         // // Assert
-        int countCachedItems = cacheService.CountCachedItems();
+        int countCachedItems = cacheService.CountCachedObjects();
         countCachedItems.Should().Be(25);
     }
 }
