@@ -16,11 +16,14 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
     public MemoryCacheFileStorageService(IOptions<CacheSettings> settings, IDateService dateService)
         : base(settings, dateService)
     {
-        CreateCacheDirectory();
-
-        if (settings.Value.InitializeOnStartup)
+        if (settings.Value.CacheEnabled)
         {
-            Initialize();
+            CreateCacheDirectory();
+
+            if (settings.Value.InitializeOnStartup)
+            {
+                Initialize();
+            }
         }
     }
     
@@ -34,6 +37,12 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
 
     public override async Task FlushAsync()
     {
+        if (!CacheSettings.CacheEnabled)
+        {
+            await Task.CompletedTask;
+            return;
+        }
+        
         foreach ((string key, CachedItem item) in Storage)
         {
             if (!item.Dirty || item.Expired(DateService))
@@ -68,6 +77,12 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
     
     public override async Task InitializeAsync()
     {
+        if (!CacheSettings.CacheEnabled)
+        {
+            await Task.CompletedTask;
+            return;
+        }
+        
         string[] files = GetCacheFiles();
         
         foreach (string file in files)
