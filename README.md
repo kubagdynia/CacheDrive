@@ -5,11 +5,15 @@
 Simple in-memory caching provider with the ability to store objects in files.
 
 ### Project structure
+
 - CacheDrive - CacheDrive library
 - CacheDrive.ExampleConsoleApp - console application with example use of the Cache Drive library
 - CacheDrive.Tests - unit tests
 
+
+
 ### Installation
+
 Use NuGet Package Manager
 ```
 Install-Package CacheDrive
@@ -23,6 +27,8 @@ or just copy into the project file to reference the package
 ```
 <PackageReference Include="CacheDrive" Version="0.1.1" />
 ```
+
+
 
 ### How to use
 
@@ -102,6 +108,8 @@ public class App
     }
 }
 ```
+
+
 ### ICacheService API Explanation
 
 ```csharp
@@ -208,6 +216,8 @@ public interface ICacheService
 }
 ```
 
+
+
 ### Configuration
 
 ```csharp
@@ -258,6 +268,17 @@ public class CacheSettings
     public bool FlushOnExit { get; set; } = true;
 }
 ```
+
+
+
+### Code Examples
+
+- CacheDrive.ExampleConsoleApp
+  https://github.com/kubagdynia/CacheDrive/tree/main/CacheDrive.ExampleConsoleApp
+- IpGeolocation
+https://github.com/kubagdynia/IpGeolocation/blob/main/IpGeolocation/Services/IpGeolocationService.cs
+
+
 
 
 ### Technologies
