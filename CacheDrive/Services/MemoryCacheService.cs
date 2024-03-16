@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CacheDrive.Configuration;
@@ -295,7 +296,7 @@ internal class MemoryCacheService : ICacheService
         => Get(item.CacheKey);
 
     private CachedItem Get(string key)
-        => Storage.TryGetValue(key, out CachedItem cachedItem) ? cachedItem : null;
+        => Storage.GetValueOrDefault(key);
     
     private void CalculateCacheExpiration()
     {
