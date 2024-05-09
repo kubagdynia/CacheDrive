@@ -47,7 +47,8 @@ public class CacheSettings
     public bool FlushOnExit { get; set; } = true;
 
     /// <summary>
-    /// 
+    /// Salt, which will be added to the key hash.
+    /// Default value is an empty string, which means that adding salt is disabled.
     /// </summary>
     public string HashKeySalt { get; set; } = "";
 }

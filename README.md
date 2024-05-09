@@ -25,7 +25,7 @@ dotnet add package CacheDrive
 
 or just copy into the project file to reference the package
 ```
-<PackageReference Include="CacheDrive" Version="0.1.1" />
+<PackageReference Include="CacheDrive" Version="0.2.0" />
 ```
 
 
@@ -60,7 +60,8 @@ serviceProvider.Dispose();
     "CacheExpiration": 60,
     "CacheType": "MemoryAndFile",
     "InitializeOnStartup": true,
-    "FlushOnExit": true
+    "FlushOnExit": true,
+    "HashKeySalt": "Secret123Secret"
   }
 }
 ```
@@ -74,7 +75,8 @@ services.RegisterCacheDrive(settings: new CacheSettings
     CacheExpiration = 60,
     CacheType = CacheType.MemoryAndFile,
     InitializeOnStartup = true,
-    FlushOnExit = true
+    FlushOnExit = true,
+    HashKeySalt = "Secret123Secret"
 });
 ```
 - Then by injecting ICacheService you can start using write and read from the cache
@@ -92,19 +94,46 @@ public class App
     {
         // SetAsync, GetAsync and TryGetValue
         string cacheKey1 = "testKey";
-        await _cacheService.SetAsync(cacheKey1, "test text...");
-        var cachedValue1 = await _cacheService.GetAsync<string>(cacheKey1);
+        await cacheService.SetAsync(cacheKey1, "test text...");
+        var cachedValue1 = await cacheService.GetAsync<string>(cacheKey1);
         Console.WriteLine($"GetAsync - cached value: {cachedValue1}");
         
-        Console.WriteLine(_cacheService.TryGetValue(cacheKey1, out string cachedValue2)
+        Console.WriteLine(cacheService.TryGetValue(cacheKey1, out string cachedValue2)
             ? $"TryGetValue OK - cached value: {cachedValue2}"
             : $"TryGetValue NOK - cached value: {cachedValue2}");
-
+        
+        Console.WriteLine();
+        
         // Set, Get
-        string cacheKey2 = "testKey2";
-        _cacheService.Set(cacheKey2, 1234567);
-        int cachedValue3 = _cacheService.Get<int>(cacheKey2);
+        string cacheKey3 = "testKey2";
+        cacheService.Set(cacheKey3, 1234567);
+        int cachedValue3 = cacheService.Get<int>(cacheKey3);
         Console.WriteLine($"Get - cached value: {cachedValue3} ");
+        
+        // ************ with hashKey
+        
+        Console.WriteLine();
+        Console.WriteLine("with hashKey");
+        Console.WriteLine();
+        
+        // SetAsync, GetAsync and TryGetValue with hashKey
+        string cacheKey2 = "testKey";
+        await cacheService.SetAsync(cacheKey2, "test text...", hashKey: true);
+        var cachedValueWithHashKey1 = await cacheService.GetAsync<string>(cacheKey2, hashKey: true);
+        Console.WriteLine($"GetAsync with hashKey - cached value: {cachedValueWithHashKey1}");
+        
+        Console.WriteLine(cacheService.TryGetValue(cacheKey2, hashKey: true, out string cachedValueWithHashKey2)
+            ? $"TryGetValue with haskkey OK - cached value: {cachedValueWithHashKey2}"
+            : $"TryGetValue with haskkey NOK - cached value: {cachedValueWithHashKey2}");
+        
+        // Set, Get with hashKey
+        
+        Console.WriteLine();
+        
+        string cacheKey4 = "testKey2";
+        cacheService.Set(cacheKey4, 1234567, hashKey: true);
+        int cachedValueWithHashKey3 = cacheService.Get<int>(cacheKey4, hashKey: true);
+        Console.WriteLine($"Get with hashKey - cached value: {cachedValueWithHashKey3} ");
     }
 }
 ```
@@ -137,6 +166,14 @@ public interface ICacheService
     bool HasItem(string key);
 
     /// <summary>
+    /// Returns whether an object with the specified key exists in the cache.
+    /// </summary>
+    /// <param name="key">The key of the value to check.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <returns>true if the key was found in the cache, otherwise, false.</returns>
+    bool HasItem(string key, bool hashKey);
+
+    /// <summary>
     /// Attempts to get the value associated with the specified key from the cache.
     /// </summary>
     /// <param name="key">The key of the value to get.</param>
@@ -149,6 +186,19 @@ public interface ICacheService
     bool TryGetValue<T>(string key, out T value);
 
     /// <summary>
+    /// Attempts to get the value associated with the specified key from the cache.
+    /// </summary>
+    /// <param name="key">The key of the value to get.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <param name="value">
+    /// When this method returns, value contains the object from
+    /// the cache with the specified key or the default value of
+    /// <typeparamref name="T"/>, if the operation failed.
+    /// </param>
+    /// <returns>true if the key was found in the cache, otherwise, false.</returns>
+    bool TryGetValue<T>(string key, bool hashKey, out T value);
+
+    /// <summary>
     /// Get the value associated with the specified key from the cache.
     /// </summary>
     /// <param name="key">The key of the value to get.</param>
@@ -156,6 +206,16 @@ public interface ICacheService
     /// key or the default value of T, if the operation failed.
     /// </returns>
     T Get<T>(string key);
+
+    /// <summary>
+    /// Get the value associated with the specified key from the cache.
+    /// </summary>
+    /// <param name="key">The key of the value to get.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <returns>The value contains the object from the cache with the specified
+    /// key or the default value of T, if the operation failed.
+    /// </returns>
+    T Get<T>(string key, bool hashKey);
     
     /// <summary>
     /// Get the value associated with the specified key from the cache.
@@ -167,6 +227,16 @@ public interface ICacheService
     Task<T> GetAsync<T>(string key);
 
     /// <summary>
+    /// Get the value associated with the specified key from the cache.
+    /// </summary>
+    /// <param name="key">The key of the value to get.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <returns>The value contains the object from the cache with the specified
+    /// key or the default value of T, if the operation failed.
+    /// </returns>
+    Task<T> GetAsync<T>(string key, bool hashKey);
+
+    /// <summary>
     /// Adds a value to the cache if the key does not already exist, or updates if the key already exists.
     /// </summary>
     /// <param name="key">The key to be added or whose value should be updated.</param>
@@ -174,6 +244,16 @@ public interface ICacheService
     /// <param name="expirySeconds">After how many seconds a given value will expire in the cache. Optional parameter.
     /// By default, the value is taken from the configuration.</param>
     void Set<T>(string key, T value, int expirySeconds = 0);
+
+    /// <summary>
+    /// Adds a value to the cache if the key does not already exist, or updates if the key already exists.
+    /// </summary>
+    /// <param name="key">The key to be added or whose value should be updated.</param>
+    /// <param name="value">The value to add or update.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <param name="expirySeconds">After how many seconds a given value will expire in the cache. Optional parameter.
+    /// By default, the value is taken from the configuration.</param>
+    void Set<T>(string key, T value, bool hashKey, int expirySeconds = 0);
     
     /// <summary>
     /// Adds a value to the cache if the key does not already exist, or updates if the key already exists.
@@ -185,11 +265,29 @@ public interface ICacheService
     Task SetAsync<T>(string key, T value, int expirySeconds = 0);
 
     /// <summary>
+    /// Adds a value to the cache if the key does not already exist, or updates if the key already exists.
+    /// </summary>
+    /// <param name="key">The key to be added or whose value should be updated.</param>
+    /// <param name="value">The value to add or update.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <param name="expirySeconds">After how many seconds a given value will expire in the cache. Optional parameter.
+    /// By default, the value is taken from the configuration.</param>
+    Task SetAsync<T>(string key, T value, bool hashKey, int expirySeconds = 0);
+
+    /// <summary>
     /// Deletes the object associated with the given key.
     /// </summary>
     /// <param name="key">The key of the element to be remove.</param>
     /// <returns>true if an object was removed successfully; otherwise, false.</returns>
     bool Delete<T>(string key);
+
+    /// <summary>
+    /// Deletes the object associated with the given key.
+    /// </summary>
+    /// <param name="key">The key of the element to be remove.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <returns>true if an object was removed successfully; otherwise, false.</returns>
+    bool Delete<T>(string key, bool hashKey);
     
     /// <summary>
     /// Deletes the object associated with the given key.
@@ -197,6 +295,14 @@ public interface ICacheService
     /// <param name="key">The key of the element to be remove.</param>
     /// <returns>true if an object was removed successfully; otherwise, false.</returns>
     Task<bool> DeleteAsync<T>(string key);
+
+    /// <summary>
+    /// Deletes the object associated with the given key.
+    /// </summary>
+    /// <param name="key">The key of the element to be remove.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <returns>true if an object was removed successfully; otherwise, false.</returns>
+    Task<bool> DeleteAsync<T>(string key, bool hashKey);
 
     /// <summary>
     /// Returns the number of objects in the cache.
@@ -266,6 +372,12 @@ public class CacheSettings
     /// Default value is true.
     /// </summary>
     public bool FlushOnExit { get; set; } = true;
+
+    /// <summary>
+    /// Salt, which will be added to the key hash.
+    /// Default value is an empty string, which means that adding salt is disabled.
+    /// </summary>
+    public string HashKeySalt { get; set; } = "";
 }
 ```
 

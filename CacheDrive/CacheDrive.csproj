@@ -5,13 +5,13 @@
     <Title>CacheDrive</Title>
     <Description>Simple in-memory caching provider with the ability to store objects in files.</Description>
     <PackageTags>cache memory-cache file-cahce</PackageTags>
-    <PackageReleaseNotes>Update libraries.</PackageReleaseNotes>
+    <PackageReleaseNotes>Key hashing capability added. Can be used for long keys.</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/kubagdynia/CacheDrive</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/kubagdynia/CacheDrive</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>2023-2024</Copyright>
-    <Version>0.1.2</Version>
+    <Version>0.2.0</Version>
     <Authors>Jakub Kurłowicz</Authors>
     <PackageIcon>CacheDrive.png</PackageIcon>
   </PropertyGroup>
