@@ -45,4 +45,9 @@ public class CacheSettings
     /// Default value is true.
     /// </summary>
     public bool FlushOnExit { get; set; } = true;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public string HashKeySalt { get; set; } = "";
 }

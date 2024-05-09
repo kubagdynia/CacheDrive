@@ -49,7 +49,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public bool HasItem(string key, bool hashKey)
-        =>  HasItem(hashKey ? HashString.HashKey(key) : key);
+        =>  HasItem(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
 
     public bool TryGetValue<T>(string key, out T value)
     {
@@ -79,7 +79,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public bool TryGetValue<T>(string key, bool hashKey, out T value)
-        => TryGetValue(hashKey ? HashString.HashKey(key) : key, out value);
+        => TryGetValue(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key, out value);
 
     private bool TryGetCacheableValue<T>(string key, out T value) where T : ICacheable
     {
@@ -120,7 +120,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public T Get<T>(string key, bool hashKey)
-        => Get<T>(hashKey ? HashString.HashKey(key) : key);
+        => Get<T>(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
 
     public async Task<T> GetAsync<T>(string key)
     {
@@ -140,7 +140,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public Task<T> GetAsync<T>(string key, bool hashKey)
-        => GetAsync<T>(hashKey ? HashString.HashKey(key) : key);
+        => GetAsync<T>(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
 
     private async Task<T> GetCacheableAsync<T>(string key) where T : ICacheable
     {
@@ -189,7 +189,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public void Set<T>(string key, T value, bool hashKey, int expirySeconds = 0)
-        => Set(hashKey ? HashString.HashKey(key) : key, value, expirySeconds);
+        => Set(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key, value, expirySeconds);
 
     public Task SetAsync<T>(string key, T value, int expirySeconds = 0)
     {
@@ -202,7 +202,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public Task SetAsync<T>(string key, T value, bool hashKey, int expirySeconds = 0)
-        => SetAsync(hashKey ? HashString.HashKey(key) : key, value, expirySeconds);
+        => SetAsync(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key, value, expirySeconds);
 
     private void SetCacheableItem<T>(T item, int expirySeconds = 0) where T : ICacheable
     {
@@ -272,7 +272,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public bool Delete<T>(string key, bool hashKey)
-        => Delete<T>(hashKey ? HashString.HashKey(key) : key);
+        => Delete<T>(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
 
     public Task<bool> DeleteAsync<T>(string key)
     {
@@ -285,7 +285,7 @@ internal class MemoryCacheService : ICacheService
     }
 
     public Task<bool> DeleteAsync<T>(string key, bool hashKey)
-        => DeleteAsync<T>(hashKey ? HashString.HashKey(key) : key);
+        => DeleteAsync<T>(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
 
     private Task<bool> DeleteAsync(string key)
         => key is null ? Task.FromResult(false) : Task.FromResult(Storage.TryRemove(key, out _));

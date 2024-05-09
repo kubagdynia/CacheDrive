@@ -37,6 +37,7 @@ public static class ServiceCollectionExtensions
                     opt.CacheType = settings.CacheType;
                     opt.InitializeOnStartup = settings.InitializeOnStartup;
                     opt.FlushOnExit = settings.FlushOnExit;
+                    opt.HashKeySalt = settings.HashKeySalt;
                 });
             }
             else
@@ -57,6 +58,7 @@ public static class ServiceCollectionExtensions
                     opt.CacheType = settings.CacheType;
                     opt.InitializeOnStartup = settings.InitializeOnStartup;
                     opt.FlushOnExit = settings.FlushOnExit;
+                    opt.HashKeySalt = settings.HashKeySalt;
                 });
             }
             else
@@ -78,7 +80,7 @@ public static class ServiceCollectionExtensions
                 CacheType.MemoryAndFile => new MemoryCacheFileStorageService(
                     serviceProvider.GetRequiredService<IOptions<CacheSettings>>(),
                     serviceProvider.GetRequiredService<IDateService>()),
-                _ => throw new ArgumentOutOfRangeException()
+                _ => throw new ArgumentOutOfRangeException(paramName: serviceProvider.GetService<IOptions<CacheSettings>>().Value.CacheType.ToString())
             };
         });
     }

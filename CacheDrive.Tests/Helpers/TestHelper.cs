@@ -11,7 +11,8 @@ public static class TestHelper
         bool cacheEnabled = true,
         CacheExpirationType cacheExpirationType = CacheExpirationType.Hours,
         int cacheExpiration = 2,
-        CacheType cacheType = CacheType.MemoryAndFile)
+        CacheType cacheType = CacheType.MemoryAndFile,
+        string hashSalt = "")
     {
         ServiceCollection services = new ServiceCollection();
         services.RegisterCacheDrive(new CacheSettings
@@ -19,7 +20,8 @@ public static class TestHelper
             CacheEnabled = cacheEnabled,
             CacheExpirationType = cacheExpirationType,
             CacheExpiration = cacheExpiration,
-            CacheType = cacheType
+            CacheType = cacheType,
+            HashKeySalt = hashSalt
         });
         services.AddSingleton<IDateService>( x => new TestDateService(dateNow));
         
