@@ -11,10 +11,10 @@
     <PackageProjectUrl>https://github.com/kubagdynia/CacheDrive</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>2023-2024</Copyright>
-    <Version>0.2.2</Version>
+    <Version>0.2.3</Version>
     <Authors>Jakub Kurłowicz</Authors>
     <PackageIcon>CacheDrive.png</PackageIcon>
-    <PackafeReadmeFile>README.md</PackafeReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>

@@ -25,7 +25,7 @@ dotnet add package CacheDrive
 
 or just copy into the project file to reference the package
 ```
-<PackageReference Include="CacheDrive" Version="0.2.1" />
+<PackageReference Include="CacheDrive" Version="0.2.3" />
 ```
 
 
