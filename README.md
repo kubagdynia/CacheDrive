@@ -25,7 +25,7 @@ dotnet add package CacheDrive
 
 or just copy into the project file to reference the package
 ```
-<PackageReference Include="CacheDrive" Version="0.2.0" />
+<PackageReference Include="CacheDrive" Version="0.2.1" />
 ```
 
 
@@ -138,6 +138,21 @@ public class App
 }
 ```
 
+If the **CacheType** is set to **MemoryAndFile** in the configuration, all cache keys that have not expired will be written to files when the application terminates (the name of the directory where the files will be saved can be set in the configuration). When the application starts, the cache will be loaded from the files. If the **CacheType** is set to **Memory**, the cache will be stored only in memory.
+
+A file with a string value might look like this:
+
+string@testKey.json
+```
+{"key":"string@testKey","cached":"2024-09-04T09:39:08.5120076Z","expires":"2024-09-04T10:39:08.512008Z","contents":{"key":"testKey","value":"test text..."}}
+```
+
+If HashKeySalt is configured, the file may look like this:
+
+string@6B86A0C7C5CEAC4414D7D3BD15DFDDA0616C7626B66F80360F438145B8CF7B9C.json
+```
+{"key":"string@6B86A0C7C5CEAC4414D7D3BD15DFDDA0616C7626B66F80360F438145B8CF7B9C","cached":"2024-09-04T09:39:08.5222015Z","expires":"2024-09-04T10:39:08.5222015Z","contents":{"key":"6B86A0C7C5CEAC4414D7D3BD15DFDDA0616C7626B66F80360F438145B8CF7B9C","value":"test text..."}}
+```
 
 ### ICacheService API Explanation
 

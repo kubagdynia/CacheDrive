@@ -14,6 +14,7 @@
     <Version>0.2.1</Version>
     <Authors>Jakub Kurłowicz</Authors>
     <PackageIcon>CacheDrive.png</PackageIcon>
+    <PackafeReadmeFile>README.md</PackafeReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,6 +25,11 @@
   
   <ItemGroup>
     <None Include="..\CacheDrive.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+    
+    <None Include="..\README.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
