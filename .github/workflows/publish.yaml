@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -29,20 +29,46 @@ jobs:
       - name: Build the project
         run: dotnet build --configuration Release --no-restore
         working-directory: ${{env.working-directory}}
+          
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
       - name: Run tests
         run: dotnet test --configuration Release --no-build --verbosity normal
         working-directory: ${{env.working-directory}}
+          
+  create_nuget_package:
+    runs-on: ubuntu-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
 
       # Create the NuGet package in the folder from the environment variable NuGetDirectory
       - name: Pack the NuGet package
         run: dotnet pack ./CacheDrive --configuration Release --no-build --output ${{env.NuGetDirectory}}
         working-directory: ${{env.working-directory}}
-        
+
       # List the NuGet package
       - name: List the NuGet package
         run: ls ${{env.NuGetDirectory}}
-      
+
       # Publish the NuGet package as an artifact, so it can be used in other workflows or in the following jobs
       - name: Publish the NuGet package as an artifact
         uses: actions/upload-artifact@v4
@@ -61,6 +87,10 @@ jobs:
         with:
           name: nuget
           path: ${{ env.NuGetDirectory }}
+          
+      # List the NuGet package
+      - name: List the NuGet package
+        run: ls ${{env.NuGetDirectory}}
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
