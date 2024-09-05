@@ -1,6 +1,10 @@
 name: Publish Nuget package
 
-on: workflow_dispatch
+on:
+  workflow_dispatch: # Allow running the workflow manually from the GitHub UI
+  release:
+    types:
+      - published # Run the workflow when a release is published
 
 env:
   working-directory: ./
@@ -48,3 +52,23 @@ jobs:
           retention-days: 7
           path: ${{env.NuGetDirectory}}/*.nupkg
           
+  publish:
+    if: github.event_name == 'release' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the NuGet package
+        uses: actions/download-artifact@v3
+        with:
+          name: nuget
+          path: ${{ env.NuGetDirectory }}
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+          
+      - name: Publish the NuGet package
+        run: |
+          foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
+            dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+          }
