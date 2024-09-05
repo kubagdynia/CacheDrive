@@ -58,7 +58,7 @@ jobs:
     
     steps:
       - name: Download the NuGet package
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: nuget
           path: ${{ env.NuGetDirectory }}
@@ -71,7 +71,7 @@ jobs:
         with:
           dotnet-version: 8.0.x
       
-      - name: Publish NuGet package
+      - name: Publish the NuGet package
         run: |
           foreach($file in (Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg)) {
             dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
