@@ -18,7 +18,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
 
@@ -45,7 +45,7 @@ jobs:
       
       # Publish the NuGet package as an artifact, so it can be used in other workflows or in the following jobs
       - name: Publish the NuGet package as an artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: nuget
           if-no-files-found: error
@@ -63,7 +63,7 @@ jobs:
           path: ${{ env.NuGetDirectory }}
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v3
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
           
