@@ -15,7 +15,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -44,8 +45,15 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal
+        run: dotnet test --no-build --verbosity detailed --logger "trx;LogFileName=test_results.trx"
         working-directory: ${{env.working-directory}}
+        
+      - name: Upload test results
+        if: failure() # Only upload the test results if the tests failed
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: test_results.trx
           
   create_nuget_package:
     runs-on: ubuntu-latest
