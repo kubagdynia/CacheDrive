@@ -30,52 +30,20 @@ jobs:
       - name: Build the project
         run: dotnet build --configuration Release --no-restore
         working-directory: ${{env.working-directory}}
-          
-  test:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
 
       - name: Run tests
-        run: dotnet test --no-build --verbosity detailed --logger "trx;LogFileName=test_results.trx"
-        
-      - name: Upload test results
-        if: failure() # Only upload the test results if the tests failed
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: test_results.trx
-          
-  create_nuget_package:
-    runs-on: ubuntu-latest
-    needs: test
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
+        run: dotnet test --configuration Release --no-build --verbosity normal
+        working-directory: ${{env.working-directory}}
 
       # Create the NuGet package in the folder from the environment variable NuGetDirectory
       - name: Pack the NuGet package
         run: dotnet pack ./CacheDrive --configuration Release --no-build --output ${{env.NuGetDirectory}}
         working-directory: ${{env.working-directory}}
-
+        
       # List the NuGet package
       - name: List the NuGet package
         run: ls ${{env.NuGetDirectory}}
-
+      
       # Publish the NuGet package as an artifact, so it can be used in other workflows or in the following jobs
       - name: Publish the NuGet package as an artifact
         uses: actions/upload-artifact@v4
