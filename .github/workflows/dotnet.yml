@@ -32,6 +32,14 @@ jobs:
         
     - name: Display dotnet version
       run: dotnet --version
+      
+    - name: Update TargetFramework
+      run: |
+        # Extract major version from dotnet-version (e.g., '7.0.x' -> 'net7.0')
+        TARGET_FRAMEWORK="net$(echo ${{ matrix.dotnet-version }} | cut -d'.' -f1).0"
+        
+        # Replace <TargetFramework> in all .csproj files
+        find . -name '*.csproj' -exec sed -i "s|<TargetFramework>.*</TargetFramework>|<TargetFramework>${TARGET_FRAMEWORK}</TargetFramework>|" {} +
     
     - name: Restore dependencies
       run: dotnet restore
