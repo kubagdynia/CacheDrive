@@ -38,13 +38,9 @@ jobs:
         
     - name: Display dotnet version
       run: dotnet --version
-    
-    - name: Restore dependencies
-      run: dotnet restore
-      working-directory: ${{env.working-directory}}
 
     - name: Build the project
-      run: dotnet build --configuration Release --framework ${{ matrix.configuration.target-framework }} --no-restore
+      run: dotnet build --configuration Release --framework ${{ matrix.configuration.target-framework }}
       working-directory: ${{env.working-directory}}
 
     - name: Run test
