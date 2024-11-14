@@ -40,7 +40,7 @@ jobs:
       run: dotnet --version
     
     - name: Restore dependencies
-      run: dotnet restore --framework ${{ matrix.configuration.target-framework }}
+      run: dotnet restore
       working-directory: ${{env.working-directory}}
 
     - name: Build the project
