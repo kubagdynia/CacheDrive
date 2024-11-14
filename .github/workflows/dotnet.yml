@@ -17,7 +17,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dotnet-version: [ '7.0.x', '8.0.x', '9.0.x' ]
+        configuration:
+          - dotnet-version: '7.0.x'
+            target-framework: 'net7.0'
+          - dotnet-version: '8.0.x'
+            target-framework: 'net8.0'
+          - dotnet-version: '9.0.x'
+            target-framework: 'net9.0'
     env:
       working-directory: ./
 
@@ -25,29 +31,21 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       
-    - name: Setup dotnet ${{ matrix.dotnet-version }}
+    - name: Setup dotnet ${{ matrix.configuration.dotnet-version }}
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ matrix.dotnet-version }}
+        dotnet-version: ${{ matrix.configuration.dotnet-version }}
         
     - name: Display dotnet version
       run: dotnet --version
-      
-    - name: Update TargetFramework
-      run: |
-        # Extract major version from dotnet-version (e.g., '7.0.x' -> 'net7.0')
-        TARGET_FRAMEWORK="net$(echo ${{ matrix.dotnet-version }} | cut -d'.' -f1).0"
-        
-        # Replace <TargetFramework> in all .csproj files
-        find . -name '*.csproj' -exec sed -i "s|<TargetFramework>.*</TargetFramework>|<TargetFramework>${TARGET_FRAMEWORK}</TargetFramework>|" {} +
     
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore --framework ${{ matrix.configuration.target-framework }}
       working-directory: ${{env.working-directory}}
 
     - name: Build the project
-      run: dotnet build --configuration Release --no-restore
+      run: dotnet build --configuration Release --framework ${{ matrix.configuration.target-framework }} --no-restore
       working-directory: ${{env.working-directory}}
 
     - name: Run test
-      run: dotnet test --configuration Release --no-build --verbosity normal
+      run: dotnet test --configuration Release --no-build --framework ${{ matrix.configuration.target-framework }} --verbosity normal

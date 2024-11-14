@@ -2,10 +2,15 @@ using CacheDrive.Services;
 
 namespace CacheDrive.Tests.Helpers;
 
-public class TestDateService(DateTime utcNow) : IDateService
+public class TestDateService : IDateService
 {
-    private DateTime? _utcNow = utcNow;
-    
+    private DateTime? _utcNow;
+
+    public TestDateService(DateTime utcNow)
+    {
+        _utcNow = utcNow;
+    }
+
     public DateTime GetUtcNow()
         => _utcNow ?? DateTime.UtcNow;
 
