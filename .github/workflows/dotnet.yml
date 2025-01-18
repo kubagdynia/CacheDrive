@@ -20,8 +20,6 @@ jobs:
         configuration:
           - dotnet-version: '8.0.x'
             target-framework: 'net8.0'
-          - dotnet-version: '7.0.x'
-            target-framework: 'net7.0'
     env:
       working-directory: ./
 
