@@ -36,6 +36,9 @@ jobs:
       with:
         dotnet-version: ${{ matrix.configuration.dotnet-version }}
         
+    - name: List installed .NET SDKs
+      run: dotnet --list-sdks
+        
     - name: Display dotnet version
       run: dotnet --version
 
