@@ -10,7 +10,7 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/kubagdynia/CacheDrive</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <Copyright>2023-2024</Copyright>
+    <Copyright>2023-2025</Copyright>
     <Version>0.3.0</Version>
     <Authors>Jakub Kurłowicz</Authors>
     <PackageIcon>CacheDrive.png</PackageIcon>
