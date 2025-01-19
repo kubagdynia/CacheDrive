@@ -15,22 +15,23 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        configuration:
-          - dotnet-version: '8.0.x'
-            target-framework: 'net8.0'
+    
     env:
       working-directory: ./
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      
-    - name: Setup dotnet ${{ matrix.configuration.dotnet-version }}
+
+    - name: Setup .NET 7.0.x
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: ${{ matrix.configuration.dotnet-version }}
+        dotnet-version: 7.0.x
+    
+    - name: Setup .NET 8.0.x
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 8.0.x
         
     - name: List installed .NET SDKs
       run: dotnet --list-sdks
@@ -39,8 +40,8 @@ jobs:
       run: dotnet --version
 
     - name: Build the project
-      run: dotnet build --configuration Release --framework ${{ matrix.configuration.target-framework }}
+      run: dotnet build --configuration Release
       working-directory: ${{env.working-directory}}
 
     - name: Run test
-      run: dotnet test --configuration Release --no-build --framework ${{ matrix.configuration.target-framework }} --verbosity normal
+      run: dotnet test --configuration Release --no-build --verbosity normal
