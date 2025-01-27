@@ -35,12 +35,8 @@ jobs:
       - name: List installed .NET SDKs
         run: dotnet --list-sdks
 
-      - name: Restore dependencies
-        run: dotnet restore
-        working-directory: ${{env.working-directory}}
-
       - name: Build the project
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build --configuration Release
         working-directory: ${{env.working-directory}}
 
       - name: Run tests
