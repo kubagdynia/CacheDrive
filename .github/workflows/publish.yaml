@@ -17,21 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 7.0.x
+      - name: Setup .NET 8.0.x and 10.0.x
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 7.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
 
-      - name: Setup .NET 8.0.x
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
-
-      - name: Setup .NET 9.0.x
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 9.0.x
-          
       - name: List installed .NET SDKs
         run: dotnet --list-sdks
 
@@ -78,7 +70,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       
       - name: Publish the NuGet package
         run: |

@@ -37,9 +37,9 @@ internal class MemoryCacheService : ICacheService
     {
         if (!CacheSettings.CacheEnabled)
         {
-            return true;
+            return false;
         }
-        
+
         if (Storage.TryGetValue(key, out CachedItem cachedItem))
         {
             return !cachedItem.Expired(_dateService);
@@ -93,7 +93,8 @@ internal class MemoryCacheService : ICacheService
         
         if (cachedItem.Expired(_dateService))
         {
-            Delete<T>(cachedItem.Key);
+            // cachedItem.Key already contains the type prefix, so remove by the raw storage key.
+            Delete(cachedItem);
             value = default;
             return false;
         }
@@ -126,17 +127,12 @@ internal class MemoryCacheService : ICacheService
     {
         if (!CacheSettings.CacheEnabled)
         {
-            return await Task.FromResult<T>(default);
+            return default;
         }
-        
+
         CacheableItem<T> cachedItem = await GetCacheableAsync<CacheableItem<T>>(key);
 
-        if (cachedItem is null)
-        {
-            return await Task.FromResult<T>(default);
-        }
-        
-        return await Task.FromResult(cachedItem.Value);
+        return cachedItem is null ? default : cachedItem.Value;
     }
 
     public Task<T> GetAsync<T>(string key, bool hashKey)
@@ -149,12 +145,12 @@ internal class MemoryCacheService : ICacheService
         CachedItem cachedItem = Get(cacheKey);
 
         if (cachedItem is null)
-            return await Task.FromResult<T>(default);
-        
+            return default;
+
         if (cachedItem.Expired(_dateService))
         {
             await DeleteAsync(cachedItem);
-            return await Task.FromResult<T>(default);
+            return default;
         }
 
         return cachedItem.Unwrap<T>();
@@ -195,9 +191,9 @@ internal class MemoryCacheService : ICacheService
     {
         if (!CacheSettings.CacheEnabled)
         {
-            return Task.FromResult<T>(default);
+            return Task.CompletedTask;
         }
-        
+
         return SetAsync(CacheableItem<T>.Create(key, value), expirySeconds);
     }
 
@@ -211,7 +207,7 @@ internal class MemoryCacheService : ICacheService
         if (Storage.TryGetValue(item.CacheKey, out CachedItem cached))
         {
             cached.Contents = JsonSerializer.SerializeToElement(item, JsonSettings.JsonOptions);
-            cached.Cached = DateTime.UtcNow;
+            cached.Cached = _dateService.GetUtcNow();
             cached.Expires = cached.Cached.Add(length);
             cached.Invalidate();
             return;
@@ -230,7 +226,7 @@ internal class MemoryCacheService : ICacheService
         if (cached != null)
         {
             cached.Contents = JsonSerializer.SerializeToElement(item, JsonSettings.JsonOptions);
-            cached.Cached = DateTime.UtcNow;
+            cached.Cached = _dateService.GetUtcNow();
             cached.Expires = cached.Cached.Add(length);
             cached.Invalidate();
             return Task.CompletedTask;

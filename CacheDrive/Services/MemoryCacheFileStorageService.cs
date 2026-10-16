@@ -1,7 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CacheDrive.Configuration;
 using CacheDrive.Models;
@@ -9,15 +10,22 @@ using Microsoft.Extensions.Options;
 
 namespace CacheDrive.Services;
 
-internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
+internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable, IAsyncDisposable
 {
+    private static readonly HashSet<char> UnsafeFileNameChars = CreateUnsafeFileNameChars();
+
+    // Resolved once, so the cache location does not move if the current directory changes at runtime.
+    private readonly string _cacheDirectory;
+
     private bool _disposed;
-    
+
     public MemoryCacheFileStorageService(IOptions<CacheSettings> settings, IDateService dateService)
         : base(settings, dateService)
     {
         if (settings.Value.CacheEnabled)
         {
+            _cacheDirectory = Path.Combine(Environment.CurrentDirectory, settings.Value.CacheFolderName);
+
             CreateCacheDirectory();
 
             if (settings.Value.InitializeOnStartup)
@@ -26,38 +34,60 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
             }
         }
     }
-    
-    ~MemoryCacheFileStorageService() => Dispose(false);
-    
+
     public void Dispose()
     {
-        Dispose(true);
-        GC.SuppressFinalize(this);
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        if (CacheSettings.CacheEnabled && CacheSettings.FlushOnExit)
+        {
+            Flush();
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_disposed)
+        {
+            return;
+        }
+
+        _disposed = true;
+
+        if (CacheSettings.CacheEnabled && CacheSettings.FlushOnExit)
+        {
+            await FlushAsync();
+        }
     }
 
     public override async Task FlushAsync()
     {
         if (!CacheSettings.CacheEnabled)
         {
-            await Task.CompletedTask;
             return;
         }
-        
+
         foreach ((string key, CachedItem item) in Storage)
         {
             if (!item.Dirty || item.Expired(DateService))
                 continue;
 
-            string cachedItem = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
-
+            string json = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
             string path = GetFilePath(key);
+            string tempPath = path + ".tmp";
 
-            await using StreamWriter sw = File.CreateText(path);
-            await sw.WriteLineAsync(cachedItem);
+            // Write to a temporary file first, so a crash never leaves a half-written cache file behind.
+            await File.WriteAllTextAsync(tempPath, json + Environment.NewLine);
+            File.Move(tempPath, path, overwrite: true);
             item.Dirty = false;
         }
     }
-    
+
     private void Flush()
     {
         foreach ((string key, CachedItem item) in Storage)
@@ -65,32 +95,32 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
             if (!item.Dirty || item.Expired(DateService))
                 continue;
 
-            string cachedItem = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
-            
+            string json = JsonSerializer.Serialize(item, JsonSettings.JsonOptions);
             string path = GetFilePath(key);
+            string tempPath = path + ".tmp";
 
-            using StreamWriter sw = File.CreateText(path);
-            sw.WriteLineAsync(cachedItem);
+            File.WriteAllText(tempPath, json + Environment.NewLine);
+            File.Move(tempPath, path, overwrite: true);
             item.Dirty = false;
         }
     }
-    
+
     public override async Task InitializeAsync()
     {
         if (!CacheSettings.CacheEnabled)
         {
-            await Task.CompletedTask;
             return;
         }
-        
-        string[] files = GetCacheFiles();
-        
-        foreach (string file in files)
+
+        foreach (string file in GetCacheFiles())
         {
             string jsonString = await File.ReadAllTextAsync(file);
-            CachedItem cachedItem = DeserializeCachedItem(jsonString);
 
-            if (cachedItem is null) return;
+            if (!TryDeserializeCachedItem(jsonString, out CachedItem cachedItem))
+            {
+                // Skip empty or corrupted files instead of aborting the whole load.
+                continue;
+            }
 
             if (cachedItem.Expired(DateService))
             {
@@ -104,95 +134,82 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable
 
     private void Initialize()
     {
-        string[] files = GetCacheFiles();
-        
-        foreach (string file in files)
+        foreach (string file in GetCacheFiles())
         {
             string jsonString = File.ReadAllText(file);
-            CachedItem cachedItem = DeserializeCachedItem(jsonString);
-    
-            if (cachedItem is null) return;
-    
+
+            if (!TryDeserializeCachedItem(jsonString, out CachedItem cachedItem))
+            {
+                continue;
+            }
+
             if (cachedItem.Expired(DateService))
             {
                 File.Delete(file);
                 continue;
             }
-    
+
             Set(cachedItem);
         }
     }
-    
-    private Regex _safeFilenameRegex;
-    
-    private Regex SafeFilenameRegex()
+
+    /// <summary>
+    /// Builds an injective, file-system-safe file name: every character that is not allowed
+    /// in a file name (and '%' itself) is percent-encoded instead of dropped,
+    /// so different keys can never end up in the same file.
+    /// </summary>
+    private static string ToSafeFileName(string key)
     {
-        if (_safeFilenameRegex is null)
+        var builder = new StringBuilder(key.Length);
+
+        foreach (char c in key)
         {
-            string regSearch = new string(Path.GetInvalidFileNameChars()) + new string(Path.GetInvalidPathChars());
-            _safeFilenameRegex = new Regex(pattern: $"[{Regex.Escape(regSearch)}]");
+            if (UnsafeFileNameChars.Contains(c))
+            {
+                builder.Append('%').Append(((int)c).ToString("X2"));
+            }
+            else
+            {
+                builder.Append(c);
+            }
         }
 
-        return _safeFilenameRegex;
+        return builder.ToString();
     }
-    
-    private string GetFilePath(string key)
+
+    private static HashSet<char> CreateUnsafeFileNameChars()
     {
-        string safeFilename = SafeFilenameRegex().Replace(input: key, replacement: string.Empty);
-        string path = CachePath(fileName: $"{safeFilename}.json");
-        return path;
+        var chars = new HashSet<char>(Path.GetInvalidFileNameChars());
+        chars.UnionWith(Path.GetInvalidPathChars());
+        chars.Add('%');
+        return chars;
     }
-    
+
+    private string GetFilePath(string key)
+        => Path.Combine(_cacheDirectory, $"{ToSafeFileName(key)}.json");
+
     private string[] GetCacheFiles()
-        => Directory.GetFiles(path: GetCacheDirectory(), searchPattern: "*.json");
-    
-    private string CachePath(string fileName)
-        => Path.Combine(Environment.CurrentDirectory, CacheSettings.CacheFolderName, fileName);
+        => Directory.GetFiles(path: _cacheDirectory, searchPattern: "*.json");
 
-    private string GetCacheDirectory()
-        => Path.Combine(Environment.CurrentDirectory, CacheSettings.CacheFolderName);
+    private static bool TryDeserializeCachedItem(string jsonString, out CachedItem cachedItem)
+    {
+        try
+        {
+            cachedItem = JsonSerializer.Deserialize<CachedItem>(jsonString, JsonSettings.JsonOptions);
+            return cachedItem is not null && !string.IsNullOrEmpty(cachedItem.Key);
+        }
+        catch (JsonException)
+        {
+            cachedItem = null;
+            return false;
+        }
+    }
 
-    private CachedItem DeserializeCachedItem(string jsonString)
-        => JsonSerializer.Deserialize<CachedItem>(jsonString, JsonSettings.JsonOptions);
-    
     private void CreateCacheDirectory()
     {
-        var folderName = GetCacheDirectory();
-        if (!string.IsNullOrEmpty(folderName) && !Directory.Exists(folderName))
+        if (!string.IsNullOrEmpty(_cacheDirectory) && !Directory.Exists(_cacheDirectory))
         {
-            Directory.CreateDirectory(folderName);
-        }
-    }
-    
-    private void Dispose(bool disposing)
-    {
-        if (_disposed)
-        {
-            return;
-        }
-
-        if (disposing)
-        {
-            // Dispose managed resources.
-            DisposeManageResource();
-        }
-            
-        // Dispose unmanaged resources.
-        DisposeUnManageResource();
-
-        _disposed = true;
-    }
-
-    private void DisposeManageResource()
-    {
-        
-    }
-
-    private void DisposeUnManageResource()
-    {
-        if (CacheSettings.FlushOnExit)
-        {
-            Flush();
+            Directory.CreateDirectory(_cacheDirectory);
         }
     }
 }
