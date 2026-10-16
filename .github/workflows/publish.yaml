@@ -46,7 +46,7 @@ jobs:
       
       # Publish the NuGet package as an artifact, so it can be used in other workflows or in the following jobs
       - name: Publish the NuGet package as an artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: nuget
           if-no-files-found: error
