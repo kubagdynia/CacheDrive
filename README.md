@@ -25,7 +25,7 @@ dotnet add package CacheDrive
 
 or just copy into the project file to reference the package
 ```
-<PackageReference Include="CacheDrive" Version="0.3.0" />
+<PackageReference Include="CacheDrive" Version="0.4.0" />
 ```
 
 
@@ -94,11 +94,11 @@ public class App
     {
         // SetAsync, GetAsync and TryGetValue
         string cacheKey1 = "testKey";
-        await cacheService.SetAsync(cacheKey1, "test text...");
-        var cachedValue1 = await cacheService.GetAsync<string>(cacheKey1);
+        await _cacheService.SetAsync(cacheKey1, "test text...");
+        var cachedValue1 = await _cacheService.GetAsync<string>(cacheKey1);
         Console.WriteLine($"GetAsync - cached value: {cachedValue1}");
         
-        Console.WriteLine(cacheService.TryGetValue(cacheKey1, out string cachedValue2)
+        Console.WriteLine(_cacheService.TryGetValue(cacheKey1, out string cachedValue2)
             ? $"TryGetValue OK - cached value: {cachedValue2}"
             : $"TryGetValue NOK - cached value: {cachedValue2}");
         
@@ -106,8 +106,8 @@ public class App
         
         // Set, Get
         string cacheKey3 = "testKey2";
-        cacheService.Set(cacheKey3, 1234567);
-        int cachedValue3 = cacheService.Get<int>(cacheKey3);
+        _cacheService.Set(cacheKey3, 1234567);
+        int cachedValue3 = _cacheService.Get<int>(cacheKey3);
         Console.WriteLine($"Get - cached value: {cachedValue3} ");
         
         // ************ with hashKey
@@ -118,21 +118,21 @@ public class App
         
         // SetAsync, GetAsync and TryGetValue with hashKey
         string cacheKey2 = "testKey";
-        await cacheService.SetAsync(cacheKey2, "test text...", hashKey: true);
-        var cachedValueWithHashKey1 = await cacheService.GetAsync<string>(cacheKey2, hashKey: true);
+        await _cacheService.SetAsync(cacheKey2, "test text...", hashKey: true);
+        var cachedValueWithHashKey1 = await _cacheService.GetAsync<string>(cacheKey2, hashKey: true);
         Console.WriteLine($"GetAsync with hashKey - cached value: {cachedValueWithHashKey1}");
         
-        Console.WriteLine(cacheService.TryGetValue(cacheKey2, hashKey: true, out string cachedValueWithHashKey2)
-            ? $"TryGetValue with haskkey OK - cached value: {cachedValueWithHashKey2}"
-            : $"TryGetValue with haskkey NOK - cached value: {cachedValueWithHashKey2}");
+        Console.WriteLine(_cacheService.TryGetValue(cacheKey2, hashKey: true, out string cachedValueWithHashKey2)
+            ? $"TryGetValue with hashKey OK - cached value: {cachedValueWithHashKey2}"
+            : $"TryGetValue with hashKey NOK - cached value: {cachedValueWithHashKey2}");
         
         // Set, Get with hashKey
         
         Console.WriteLine();
         
         string cacheKey4 = "testKey2";
-        cacheService.Set(cacheKey4, 1234567, hashKey: true);
-        int cachedValueWithHashKey3 = cacheService.Get<int>(cacheKey4, hashKey: true);
+        _cacheService.Set(cacheKey4, 1234567, hashKey: true);
+        int cachedValueWithHashKey3 = _cacheService.Get<int>(cacheKey4, hashKey: true);
         Console.WriteLine($"Get with hashKey - cached value: {cachedValueWithHashKey3} ");
     }
 }
@@ -410,7 +410,7 @@ https://github.com/kubagdynia/IpGeolocation/blob/main/IpGeolocation/Services/IpG
 
 ### Technologies
 List of technologies, frameworks and libraries used for implementation:
-- [.NET 7.0 or .NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0) (platform)
+- [.NET 8.0 or .NET 10.0](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) (platform)
 - [NUnit](https://nunit.org/) (testing framework)
 
 ### License
