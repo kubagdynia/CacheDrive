@@ -5,13 +5,13 @@
     <Title>CacheDrive</Title>
     <Description>Simple in-memory caching provider with the ability to store objects in files.</Description>
     <PackageTags>cache memory-cache file-cache</PackageTags>
-    <PackageReleaseNotes>Drop .NET 7, add .NET 10. Fixes: expired items are now removed on read, a corrupted cache file no longer aborts loading, cache files are written atomically and awaited on exit, file names no longer collide, generic types get distinct cache keys.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added HasItem&lt;T&gt;; HasItem(key) now finds items of any type. Deleting an item, reading an expired item and ClearCache now also remove the cache files, so removed items no longer come back after a restart.</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/kubagdynia/CacheDrive</RepositoryUrl>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageProjectUrl>https://github.com/kubagdynia/CacheDrive</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <Copyright>2023-2026</Copyright>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <Authors>Jakub Kurłowicz</Authors>
     <PackageIcon>CacheDrive.png</PackageIcon>
     <PackageReadmeFile>README.md</PackageReadmeFile>

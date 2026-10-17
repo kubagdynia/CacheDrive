@@ -105,6 +105,23 @@ internal class MemoryCacheFileStorageService : MemoryCacheService, IDisposable, 
         }
     }
 
+    protected override void OnItemRemoved(string storageKey)
+    {
+        if (_cacheDirectory is null)
+        {
+            return;
+        }
+
+        // Without this the item would be loaded back from its file on the next start.
+        // I/O errors are not swallowed: a file that stays behind would silently bring the item back.
+        string path = GetFilePath(storageKey);
+
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
+    }
+
     public override async Task InitializeAsync()
     {
         if (!CacheSettings.CacheEnabled)
