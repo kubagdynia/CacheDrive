@@ -35,7 +35,10 @@ public class RegressionTests
         return name;
     }
 
-    private static ServiceProvider CreateFileProvider(string folderName, DateTime now)
+    private static string[] JsonFiles(string folderName)
+        => Directory.GetFiles(Path.Combine(Environment.CurrentDirectory, folderName), "*.json");
+
+    private static ServiceProvider CreateFileProvider(string folderName, DateTime now, bool initializeOnStartup = true)
     {
         ServiceCollection services = new ServiceCollection();
         services.RegisterCacheDrive(new CacheSettings
@@ -44,7 +47,7 @@ public class RegressionTests
             CacheFolderName = folderName,
             CacheExpirationType = CacheExpirationType.Hours,
             CacheExpiration = 2,
-            InitializeOnStartup = true,
+            InitializeOnStartup = initializeOnStartup,
             FlushOnExit = true
         });
         services.AddSingleton<IDateService>(_ => new TestDateService(now));
@@ -188,5 +191,117 @@ public class RegressionTests
 
         readerCache.TryGetValue("key", out string value).Should().BeTrue();
         value.Should().Be("value");
+    }
+
+    [Test]
+    public void HasItemShouldFindItemsStoredWithSet()
+    {
+        using ServiceProvider serviceProvider = TestHelper.CreateServiceProvider(FixedNow, cacheType: CacheType.Memory);
+        ICacheService cacheService = serviceProvider.GetRequiredService<ICacheService>();
+        IDateService dateService = serviceProvider.GetRequiredService<IDateService>();
+
+        cacheService.Set("key", "value");
+        cacheService.Set("hashed", "value", hashKey: true);
+
+        cacheService.HasItem("key").Should().BeTrue();
+        cacheService.HasItem<string>("key").Should().BeTrue();
+        cacheService.HasItem<int>("key").Should().BeFalse();
+        cacheService.HasItem("missing").Should().BeFalse();
+
+        cacheService.HasItem("hashed", hashKey: true).Should().BeTrue();
+        cacheService.HasItem<string>("hashed", hashKey: true).Should().BeTrue();
+        cacheService.HasItem<string>("hashed").Should().BeFalse();
+
+        // Both overloads ignore expired items (cache expiration is 2 hours)
+        dateService.SetUtcNow(FixedNow.AddHours(3));
+
+        cacheService.HasItem("key").Should().BeFalse();
+        cacheService.HasItem<string>("key").Should().BeFalse();
+    }
+
+    [Test]
+    public async Task DeletedItemsShouldNotComeBackAfterRestart()
+    {
+        string folder = NewFolderName();
+
+        using ServiceProvider writer = CreateFileProvider(folder, FixedNow);
+        ICacheService writerCache = writer.GetRequiredService<ICacheService>();
+
+        await writerCache.SetAsync("a", "1");
+        await writerCache.SetAsync("b", "2");
+        await writerCache.FlushAsync();
+        JsonFiles(folder).Should().HaveCount(2);
+
+        writerCache.Delete<string>("a").Should().BeTrue();
+        JsonFiles(folder).Should().HaveCount(1);
+
+        using ServiceProvider reader = CreateFileProvider(folder, FixedNow);
+        ICacheService readerCache = reader.GetRequiredService<ICacheService>();
+
+        readerCache.CountCachedObjects().Should().Be(1);
+        readerCache.HasItem<string>("b").Should().BeTrue();
+        readerCache.HasItem<string>("a").Should().BeFalse();
+    }
+
+    [Test]
+    public async Task DeleteShouldRemoveTheFileOfAnItemThatWasNotLoaded()
+    {
+        string folder = NewFolderName();
+
+        using (ServiceProvider writer = CreateFileProvider(folder, FixedNow))
+        {
+            ICacheService writerCache = writer.GetRequiredService<ICacheService>();
+            await writerCache.SetAsync("a", "1");
+            await writerCache.FlushAsync();
+        }
+
+        JsonFiles(folder).Should().HaveCount(1);
+
+        // InitializeOnStartup = false: the item is on disk but not in memory
+        using ServiceProvider reader = CreateFileProvider(folder, FixedNow, initializeOnStartup: false);
+        ICacheService readerCache = reader.GetRequiredService<ICacheService>();
+        readerCache.CountCachedObjects().Should().Be(0);
+
+        readerCache.Delete<string>("a");
+
+        JsonFiles(folder).Should().BeEmpty();
+    }
+
+    [Test]
+    public async Task ClearCacheShouldAlsoRemoveTheCacheFiles()
+    {
+        string folder = NewFolderName();
+
+        using ServiceProvider provider = CreateFileProvider(folder, FixedNow);
+        ICacheService cacheService = provider.GetRequiredService<ICacheService>();
+
+        await cacheService.SetAsync("a", "1");
+        await cacheService.SetAsync("b", "2");
+        await cacheService.FlushAsync();
+        JsonFiles(folder).Should().HaveCount(2);
+
+        cacheService.ClearCache();
+
+        cacheService.CountCachedObjects().Should().Be(0);
+        JsonFiles(folder).Should().BeEmpty();
+    }
+
+    [Test]
+    public async Task ReadingAnExpiredItemShouldAlsoRemoveItsFile()
+    {
+        string folder = NewFolderName();
+
+        using ServiceProvider provider = CreateFileProvider(folder, FixedNow);
+        ICacheService cacheService = provider.GetRequiredService<ICacheService>();
+        IDateService dateService = provider.GetRequiredService<IDateService>();
+
+        await cacheService.SetAsync("a", "1");
+        await cacheService.FlushAsync();
+        JsonFiles(folder).Should().HaveCount(1);
+
+        dateService.SetUtcNow(FixedNow.AddHours(3));
+        cacheService.TryGetValue("a", out string _).Should().BeFalse();
+
+        JsonFiles(folder).Should().BeEmpty();
     }
 }

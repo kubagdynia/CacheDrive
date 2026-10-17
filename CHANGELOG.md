@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.5.0
+
+### Added
+- `HasItem<T>(key)` and `HasItem<T>(key, hashKey)`: check whether an unexpired item of type `T` exists. These are new members of `ICacheService`, so custom implementations or mocks of the interface need to add them.
+
+### Fixed
+- `HasItem(key)` and `HasItem(key, hashKey)` compared the key with the internal storage key (which includes the `type@` prefix), so they never found items stored with `Set`. They now find an unexpired item with that key regardless of its type.
+- With `CacheType.MemoryAndFile`, items removed with `Delete`/`DeleteAsync`, items removed because they expired (on read or in `ClearExpiredObjects`) and items removed by `ClearCache` now also have their cache files removed. Previously they were loaded back from disk on the next start. `Delete` removes the file even if the item was not loaded into memory (for example with `InitializeOnStartup = false`).
+
+### Notes
+- `ClearCache` removes the files of the items that are in memory. Files that were never loaded stay on disk, and the same goes for other files in the cache folder.
+- `HasItem(key)` without a type now scans the cache (O(n)); prefer `HasItem<T>(key)`, which is a direct lookup.
+- The cache is not synchronized with file operations: a `FlushAsync` running at the same moment as a `Delete` can write the file of the item that is being deleted.
+- If a cache file cannot be deleted (locked, no permission), the `IOException` or `UnauthorizedAccessException` is thrown instead of silently bringing the item back later.
+
 ## 0.4.0
 
 ### Changed

@@ -35,21 +35,44 @@ internal class MemoryCacheService : ICacheService
     
     public bool HasItem(string key)
     {
-        if (!CacheSettings.CacheEnabled)
+        if (!CacheSettings.CacheEnabled || key is null)
         {
             return false;
         }
 
-        if (Storage.TryGetValue(key, out CachedItem cachedItem))
+        // Storage keys have the form "type@key", so look for an unexpired item
+        // whose key part matches, whatever its type is.
+        foreach ((string storageKey, CachedItem item) in Storage)
         {
-            return !cachedItem.Expired(_dateService);
+            int separator = storageKey.IndexOf('@');
+
+            if (separator >= 0
+                && storageKey.AsSpan(separator + 1).SequenceEqual(key.AsSpan())
+                && !item.Expired(_dateService))
+            {
+                return true;
+            }
         }
 
         return false;
     }
 
     public bool HasItem(string key, bool hashKey)
-        =>  HasItem(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
+        => HasItem(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
+
+    public bool HasItem<T>(string key)
+    {
+        if (!CacheSettings.CacheEnabled || key is null)
+        {
+            return false;
+        }
+
+        return Storage.TryGetValue(CacheableItem<T>.GetCacheKey(key), out CachedItem cachedItem)
+               && !cachedItem.Expired(_dateService);
+    }
+
+    public bool HasItem<T>(string key, bool hashKey)
+        => HasItem<T>(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
 
     public bool TryGetValue<T>(string key, out T value)
     {
@@ -264,7 +287,7 @@ internal class MemoryCacheService : ICacheService
             return false;
         }
 
-        return key is not null && Storage.TryRemove(CacheableItem<T>.GetCacheKey(key), out _);
+        return key is not null && Remove(CacheableItem<T>.GetCacheKey(key));
     }
 
     public bool Delete<T>(string key, bool hashKey)
@@ -284,10 +307,34 @@ internal class MemoryCacheService : ICacheService
         => DeleteAsync<T>(hashKey ? HashString.HashKey(key, CacheSettings.HashKeySalt) : key);
 
     private Task<bool> DeleteAsync(string key)
-        => key is null ? Task.FromResult(false) : Task.FromResult(Storage.TryRemove(key, out _));
+        => key is null ? Task.FromResult(false) : Task.FromResult(Remove(key));
     
     private bool Delete(string key)
-        => key is not null && Storage.TryRemove(key, out _);
+        => key is not null && Remove(key);
+
+    /// <summary>
+    /// Removes an entry by its internal storage key (the "type@key" form).
+    /// </summary>
+    /// <returns>true if the entry was in memory and has been removed.</returns>
+    private bool Remove(string storageKey)
+    {
+        bool removed = Storage.TryRemove(storageKey, out _);
+
+        // Always notify, even when nothing was in memory: a persisted copy that was
+        // never loaded (e.g. InitializeOnStartup = false) must not come back later.
+        OnItemRemoved(storageKey);
+
+        return removed;
+    }
+
+    /// <summary>
+    /// Called when an entry is removed (deleted, expired or cleared).
+    /// Storage backends override it to remove their persisted copy of the entry.
+    /// </summary>
+    /// <param name="storageKey">The internal storage key, in the form "type@key".</param>
+    protected virtual void OnItemRemoved(string storageKey)
+    {
+    }
     
     private Task<bool> DeleteAsync(CachedItem item)
         => DeleteAsync(item.Key);
@@ -299,7 +346,13 @@ internal class MemoryCacheService : ICacheService
         => Storage.Count;
 
     public void ClearCache()
-        => Storage.Clear();
+    {
+        // Remove item by item (instead of Storage.Clear()) so that persisted copies are removed too.
+        foreach (string key in Storage.Keys)
+        {
+            Remove(key);
+        }
+    }
 
     public void ClearExpiredObjects()
     {

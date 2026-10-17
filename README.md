@@ -25,7 +25,7 @@ dotnet add package CacheDrive
 
 or just copy into the project file to reference the package
 ```
-<PackageReference Include="CacheDrive" Version="0.4.0" />
+<PackageReference Include="CacheDrive" Version="0.5.0" />
 ```
 
 
@@ -181,12 +181,29 @@ public interface ICacheService
     bool HasItem(string key);
 
     /// <summary>
+    /// Returns whether an object of type T with the specified key
+    /// exists in the cache and has not expired.
+    /// </summary>
+    /// <param name="key">The key of the value to check.</param>
+    /// <returns>true if the key was found in the cache, otherwise, false.</returns>
+    bool HasItem<T>(string key);
+
+    /// <summary>
     /// Returns whether an object with the specified key exists in the cache.
     /// </summary>
     /// <param name="key">The key of the value to check.</param>
     /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
     /// <returns>true if the key was found in the cache, otherwise, false.</returns>
     bool HasItem(string key, bool hashKey);
+
+    /// <summary>
+    /// Returns whether an object of type T with the specified key
+    /// exists in the cache and has not expired.
+    /// </summary>
+    /// <param name="key">The key of the value to check.</param>
+    /// <param name="hashKey">Whether the key should be hashed. Can be used for long keys.</param>
+    /// <returns>true if the key was found in the cache, otherwise, false.</returns>
+    bool HasItem<T>(string key, bool hashKey);
 
     /// <summary>
     /// Attempts to get the value associated with the specified key from the cache.
@@ -326,7 +343,8 @@ public interface ICacheService
     int CountCachedObjects();
 
     /// <summary>
-    /// Removes all keys and values from the cache
+    /// Removes all keys and values from the cache.
+    /// With CacheType.MemoryAndFile the cache files of the items that are in memory are removed as well.
     /// </summary>
     void ClearCache();
 
