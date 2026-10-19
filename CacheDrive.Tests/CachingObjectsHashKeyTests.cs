@@ -2,7 +2,6 @@ using System.Text.Json.Serialization;
 using CacheDrive.Configuration;
 using CacheDrive.Services;
 using CacheDrive.Tests.Helpers;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CacheDrive.Tests;
@@ -44,7 +43,7 @@ public class CachingObjectsHashKeyTests
         await cacheService.FlushAsync();
         
         // Assert
-        cachedTestClass.Should().BeEquivalentTo(_testClass);
+        AssertSameAs(_testClass, cachedTestClass);
     }
     
     [Test, Order(1)]
@@ -68,7 +67,7 @@ public class CachingObjectsHashKeyTests
         await cacheService.FlushAsync();
         
         // Assert
-        cachedTestClass.Should().BeEquivalentTo(_testClass);
+        AssertSameAs(_testClass, cachedTestClass);
     }
     
     [Test, Order(2)]
@@ -90,7 +89,7 @@ public class CachingObjectsHashKeyTests
         await cacheService.FlushAsync();
         
         // Assert
-        cachedTestClass.Should().BeEquivalentTo(_testClass);
+        AssertSameAs(_testClass, cachedTestClass);
     }
     
     [Test, Order(3)]
@@ -112,7 +111,16 @@ public class CachingObjectsHashKeyTests
         await cacheService.FlushAsync();
         
         // Assert
-        cachedTestClass.Should().BeNull();
+        Assert.That(cachedTestClass, Is.Null);
+    }
+
+    private static void AssertSameAs(TestClass expected, TestClass actual)
+    {
+        Assert.That(actual, Is.Not.Null);
+        Assert.That(actual.Id, Is.EqualTo(expected.Id));
+        Assert.That(actual.FirstName, Is.EqualTo(expected.FirstName));
+        Assert.That(actual.LastName, Is.EqualTo(expected.LastName));
+        Assert.That(actual.Age, Is.EqualTo(expected.Age));
     }
 
     private class TestClass

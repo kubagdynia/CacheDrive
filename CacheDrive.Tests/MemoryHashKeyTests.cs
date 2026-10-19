@@ -1,7 +1,6 @@
 using CacheDrive.Configuration;
 using CacheDrive.Services;
 using CacheDrive.Tests.Helpers;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CacheDrive.Tests;
@@ -32,7 +31,7 @@ public class MemoryHashKeyTests
         string resultValue =  await cacheService.GetAsync<string>(key, hashKey);
         
         // Assert
-        resultValue.Should().Be(text);
+        Assert.That(resultValue, Is.EqualTo(text));
     }
     
     [Test]
@@ -55,9 +54,9 @@ public class MemoryHashKeyTests
         }
         
         // Assert
-        cacheService.CountCachedObjects().Should().Be(100);
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(100));
         cacheService.ClearCache();
-        cacheService.CountCachedObjects().Should().Be(0);
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(0));
     }
     
     [Test]
@@ -90,10 +89,10 @@ public class MemoryHashKeyTests
         dateService.SetUtcNow(dateService.GetUtcNow().AddHours(2));
         
         // Assert
-        cacheService.CountCachedObjects().Should().Be(100);
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(100));
         
         cacheService.ClearExpiredObjects();
         
-        cacheService.CountCachedObjects().Should().Be(50);
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(50));
     }
 }
