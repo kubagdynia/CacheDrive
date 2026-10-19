@@ -2,7 +2,6 @@ using CacheDrive.Configuration;
 using CacheDrive.Extensions;
 using CacheDrive.Services;
 using CacheDrive.Tests.Helpers;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CacheDrive.Tests;
@@ -63,15 +62,15 @@ public class RegressionTests
         IDateService dateService = serviceProvider.GetRequiredService<IDateService>();
 
         cacheService.Set("key", "value");
-        cacheService.CountCachedObjects().Should().Be(1);
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(1));
 
         // Act
         dateService.SetUtcNow(FixedNow.AddHours(3));
         bool found = cacheService.TryGetValue("key", out string _);
 
         // Assert
-        found.Should().BeFalse();
-        cacheService.CountCachedObjects().Should().Be(0);
+        Assert.That(found, Is.False);
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(0));
     }
 
     [Test]
@@ -92,8 +91,8 @@ public class RegressionTests
         bool found = cacheService.TryGetValue("key", out string value);
 
         // Assert
-        found.Should().BeTrue();
-        value.Should().Be("second");
+        Assert.That(found, Is.True);
+        Assert.That(value, Is.EqualTo("second"));
     }
 
     [Test]
@@ -105,7 +104,7 @@ public class RegressionTests
 
         cacheService.Set("key", "value");
 
-        cacheService.HasItem("key").Should().BeFalse();
+        Assert.That(cacheService.HasItem("key"), Is.False);
     }
 
     [Test]
@@ -117,9 +116,9 @@ public class RegressionTests
         cacheService.Set("key", new List<int> { 1, 2 });
         cacheService.Set("key", new List<string> { "a" });
 
-        cacheService.CountCachedObjects().Should().Be(2);
-        cacheService.Get<List<int>>("key").Should().BeEquivalentTo(new List<int> { 1, 2 });
-        cacheService.Get<List<string>>("key").Should().BeEquivalentTo(new List<string> { "a" });
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(2));
+        Assert.That(cacheService.Get<List<int>>("key"), Is.EqualTo(new List<int> { 1, 2 }));
+        Assert.That(cacheService.Get<List<string>>("key"), Is.EqualTo(new List<string> { "a" }));
     }
 
     [Test]
@@ -145,8 +144,8 @@ public class RegressionTests
         await readerCache.InitializeAsync();
 
         // Assert
-        readerCache.TryGetValue("good", out string value).Should().BeTrue();
-        value.Should().Be("value");
+        Assert.That(readerCache.TryGetValue("good", out string value), Is.True);
+        Assert.That(value, Is.EqualTo("value"));
     }
 
     [Test]
@@ -168,9 +167,9 @@ public class RegressionTests
         ICacheService readerCache = reader.GetRequiredService<ICacheService>();
 
         // Assert
-        readerCache.CountCachedObjects().Should().Be(2);
-        readerCache.Get<string>("a/b").Should().Be("with-slash");
-        readerCache.Get<string>("ab").Should().Be("without-slash");
+        Assert.That(readerCache.CountCachedObjects(), Is.EqualTo(2));
+        Assert.That(readerCache.Get<string>("a/b"), Is.EqualTo("with-slash"));
+        Assert.That(readerCache.Get<string>("ab"), Is.EqualTo("without-slash"));
     }
 
     [Test]
@@ -189,8 +188,8 @@ public class RegressionTests
         using ServiceProvider reader = CreateFileProvider(folder, FixedNow);
         ICacheService readerCache = reader.GetRequiredService<ICacheService>();
 
-        readerCache.TryGetValue("key", out string value).Should().BeTrue();
-        value.Should().Be("value");
+        Assert.That(readerCache.TryGetValue("key", out string value), Is.True);
+        Assert.That(value, Is.EqualTo("value"));
     }
 
     [Test]
@@ -203,20 +202,20 @@ public class RegressionTests
         cacheService.Set("key", "value");
         cacheService.Set("hashed", "value", hashKey: true);
 
-        cacheService.HasItem("key").Should().BeTrue();
-        cacheService.HasItem<string>("key").Should().BeTrue();
-        cacheService.HasItem<int>("key").Should().BeFalse();
-        cacheService.HasItem("missing").Should().BeFalse();
+        Assert.That(cacheService.HasItem("key"), Is.True);
+        Assert.That(cacheService.HasItem<string>("key"), Is.True);
+        Assert.That(cacheService.HasItem<int>("key"), Is.False);
+        Assert.That(cacheService.HasItem("missing"), Is.False);
 
-        cacheService.HasItem("hashed", hashKey: true).Should().BeTrue();
-        cacheService.HasItem<string>("hashed", hashKey: true).Should().BeTrue();
-        cacheService.HasItem<string>("hashed").Should().BeFalse();
+        Assert.That(cacheService.HasItem("hashed", hashKey: true), Is.True);
+        Assert.That(cacheService.HasItem<string>("hashed", hashKey: true), Is.True);
+        Assert.That(cacheService.HasItem<string>("hashed"), Is.False);
 
         // Both overloads ignore expired items (cache expiration is 2 hours)
         dateService.SetUtcNow(FixedNow.AddHours(3));
 
-        cacheService.HasItem("key").Should().BeFalse();
-        cacheService.HasItem<string>("key").Should().BeFalse();
+        Assert.That(cacheService.HasItem("key"), Is.False);
+        Assert.That(cacheService.HasItem<string>("key"), Is.False);
     }
 
     [Test]
@@ -230,17 +229,17 @@ public class RegressionTests
         await writerCache.SetAsync("a", "1");
         await writerCache.SetAsync("b", "2");
         await writerCache.FlushAsync();
-        JsonFiles(folder).Should().HaveCount(2);
+        Assert.That(JsonFiles(folder), Has.Length.EqualTo(2));
 
-        writerCache.Delete<string>("a").Should().BeTrue();
-        JsonFiles(folder).Should().HaveCount(1);
+        Assert.That(writerCache.Delete<string>("a"), Is.True);
+        Assert.That(JsonFiles(folder), Has.Length.EqualTo(1));
 
         using ServiceProvider reader = CreateFileProvider(folder, FixedNow);
         ICacheService readerCache = reader.GetRequiredService<ICacheService>();
 
-        readerCache.CountCachedObjects().Should().Be(1);
-        readerCache.HasItem<string>("b").Should().BeTrue();
-        readerCache.HasItem<string>("a").Should().BeFalse();
+        Assert.That(readerCache.CountCachedObjects(), Is.EqualTo(1));
+        Assert.That(readerCache.HasItem<string>("b"), Is.True);
+        Assert.That(readerCache.HasItem<string>("a"), Is.False);
     }
 
     [Test]
@@ -255,16 +254,16 @@ public class RegressionTests
             await writerCache.FlushAsync();
         }
 
-        JsonFiles(folder).Should().HaveCount(1);
+        Assert.That(JsonFiles(folder), Has.Length.EqualTo(1));
 
         // InitializeOnStartup = false: the item is on disk but not in memory
         using ServiceProvider reader = CreateFileProvider(folder, FixedNow, initializeOnStartup: false);
         ICacheService readerCache = reader.GetRequiredService<ICacheService>();
-        readerCache.CountCachedObjects().Should().Be(0);
+        Assert.That(readerCache.CountCachedObjects(), Is.EqualTo(0));
 
         readerCache.Delete<string>("a");
 
-        JsonFiles(folder).Should().BeEmpty();
+        Assert.That(JsonFiles(folder), Is.Empty);
     }
 
     [Test]
@@ -278,12 +277,12 @@ public class RegressionTests
         await cacheService.SetAsync("a", "1");
         await cacheService.SetAsync("b", "2");
         await cacheService.FlushAsync();
-        JsonFiles(folder).Should().HaveCount(2);
+        Assert.That(JsonFiles(folder), Has.Length.EqualTo(2));
 
         cacheService.ClearCache();
 
-        cacheService.CountCachedObjects().Should().Be(0);
-        JsonFiles(folder).Should().BeEmpty();
+        Assert.That(cacheService.CountCachedObjects(), Is.EqualTo(0));
+        Assert.That(JsonFiles(folder), Is.Empty);
     }
 
     [Test]
@@ -297,11 +296,11 @@ public class RegressionTests
 
         await cacheService.SetAsync("a", "1");
         await cacheService.FlushAsync();
-        JsonFiles(folder).Should().HaveCount(1);
+        Assert.That(JsonFiles(folder), Has.Length.EqualTo(1));
 
         dateService.SetUtcNow(FixedNow.AddHours(3));
-        cacheService.TryGetValue("a", out string _).Should().BeFalse();
+        Assert.That(cacheService.TryGetValue("a", out string _), Is.False);
 
-        JsonFiles(folder).Should().BeEmpty();
+        Assert.That(JsonFiles(folder), Is.Empty);
     }
 }

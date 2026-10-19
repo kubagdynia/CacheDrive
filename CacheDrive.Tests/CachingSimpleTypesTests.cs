@@ -1,7 +1,6 @@
 using CacheDrive.Configuration;
 using CacheDrive.Services;
 using CacheDrive.Tests.Helpers;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CacheDrive.Tests;
@@ -44,11 +43,11 @@ public class CachingSimpleTypesTests
         bool cachedBoolItem = await cacheService.GetAsync<bool>(boolItem.key);
         
         // Assert
-        cachedIntItem.Should().Be(intItem.value);
-        cachedCharItem.Should().Be(charItem.value);
-        cachedFloatItem.Should().Be(floatItem.value);
-        cachedDoubleItem.Should().Be(doubleItem.value);
-        cachedBoolItem.Should().Be(boolItem.value);
+        Assert.That(cachedIntItem, Is.EqualTo(intItem.value));
+        Assert.That(cachedCharItem, Is.EqualTo(charItem.value));
+        Assert.That(cachedFloatItem, Is.EqualTo(floatItem.value));
+        Assert.That(cachedDoubleItem, Is.EqualTo(doubleItem.value));
+        Assert.That(cachedBoolItem, Is.EqualTo(boolItem.value));
     }
     
     [Test]
@@ -87,11 +86,11 @@ public class CachingSimpleTypesTests
         bool cachedBoolItem = cacheService.Get<bool>(boolItem.key);
         
         // Assert
-        cachedIntItem.Should().Be(intItem.value);
-        cachedCharItem.Should().Be(charItem.value);
-        cachedFloatItem.Should().Be(floatItem.value);
-        cachedDoubleItem.Should().Be(doubleItem.value);
-        cachedBoolItem.Should().Be(boolItem.value);
+        Assert.That(cachedIntItem, Is.EqualTo(intItem.value));
+        Assert.That(cachedCharItem, Is.EqualTo(charItem.value));
+        Assert.That(cachedFloatItem, Is.EqualTo(floatItem.value));
+        Assert.That(cachedDoubleItem, Is.EqualTo(doubleItem.value));
+        Assert.That(cachedBoolItem, Is.EqualTo(boolItem.value));
     }
 
     [Test]
@@ -126,7 +125,7 @@ public class CachingSimpleTypesTests
 
         // // Assert
         int countCachedItems = cacheService.CountCachedObjects();
-        countCachedItems.Should().Be(25);
+        Assert.That(countCachedItems, Is.EqualTo(25));
     }
     
     [Test]
@@ -161,6 +160,6 @@ public class CachingSimpleTypesTests
 
         // // Assert
         int countCachedItems = cacheService.CountCachedObjects();
-        countCachedItems.Should().Be(25);
+        Assert.That(countCachedItems, Is.EqualTo(25));
     }
 }

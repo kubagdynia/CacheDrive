@@ -1,7 +1,6 @@
 using CacheDrive.Configuration;
 using CacheDrive.Services;
 using CacheDrive.Tests.Helpers;
-using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace CacheDrive.Tests;
@@ -26,7 +25,7 @@ public class MemoryAndFileHashKeyWithSaltTests
         // Assert
         if (cacheService.TryGetValue(key, hashKey: true, out string cachedValue))
         {
-            cachedValue.Should().Be("John");
+            Assert.That(cachedValue, Is.EqualTo("John"));
             await cacheService.FlushAsync();
         }
         else
@@ -53,7 +52,7 @@ public class MemoryAndFileHashKeyWithSaltTests
         // Assert
         if (cacheService.TryGetValue(key, hashKey: true, out string cachedValue))
         {
-            cachedValue.Should().Be("John");
+            Assert.That(cachedValue, Is.EqualTo("John"));
             await cacheService.FlushAsync();
         }
         else
